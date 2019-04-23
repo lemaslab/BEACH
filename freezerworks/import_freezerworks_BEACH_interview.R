@@ -85,43 +85,23 @@ dat.s %>%
 
 # output data for import to redcap
 redcap=dat.s %>%
-  select(Participant_ID,clinic_visit,Clinic.visit.date,Mom_Baby,Aliquot.Type,crc_specimen_barcode,crc_specimen_number,
+  ungroup()%>%
+  select(Participant_ID,Clinic.visit.date,Mom_Baby,Aliquot.Type,crc_specimen_barcode,
          tube.type,Aliquot.Number) %>%
-  rename(test_id=Participant_ID, 
-         biosample_study_visit=clinic_visit,
+  rename(record_id=Participant_ID, 
          biosample_collection_date=Clinic.visit.date,
          biosample_mom_baby=Mom_Baby,
          biosample_aliquot_type=Aliquot.Type,
          crc_specimen_barcode=crc_specimen_barcode,
-         crc_specimen_number=crc_specimen_number,
          biosample_tube_type=tube.type,
          biosample_aliquot_numb=Aliquot.Number)%>%
-  mutate(redcap_event_name=NA,
-         redcap_repeat_instrument="biological_specimen_collection")%>%
-  arrange(test_id,biosample_study_visit,biosample_collection_date,biosample_aliquot_type)%>%
-  #group_by(test_id,biosample_study_visit) %>% 
+  mutate(redcap_repeat_instrument="biological_specimen_collection")%>%
+  arrange(record_id,biosample_collection_date,biosample_aliquot_type)%>%
   mutate(redcap_repeat_instance=row_number())%>%
-  select(test_id,redcap_event_name,redcap_repeat_instrument,redcap_repeat_instance,everything())%>%
-  mutate(redcap_event_name=case_when(biosample_study_visit=="3rd_trimester" ~ "third_trimester_arm_1",
-                                     biosample_study_visit=="2_week" ~ "two_week_arm_1",
-                                     biosample_study_visit=="2_months" ~ "two_month_arm_1",
-                                     biosample_study_visit=="6_months" ~ "six_month_arm_1",
-                                     biosample_study_visit=="12_months" ~ "twelve_month_arm_1"))%>%
-  mutate(redcap_event_name = factor(redcap_event_name, 
-                               levels = c("third_trimester_arm_1", 
-                                          "two_week_arm_1", 
-                                          "two_month_arm_1",
-                                          "six_month_arm_1",
-                                          "twelve_month_arm_1")))%>%
+  select(record_id,redcap_repeat_instrument,redcap_repeat_instance,everything())%>%
   mutate(biosample_collection_date=format(biosample_collection_date, "%m/%d/%Y"))%>%
   ungroup()%>%
-  mutate(biosample_study_visit=recode(biosample_study_visit, 
-                     "3rd_trimester"="1", 
-                     "2_week"="2",
-                     "2_months"="3",
-                     "6_months"="4",
-                     "12_months"="5"),
-         biosample_mom_baby=recode(biosample_mom_baby,
+  mutate(biosample_mom_baby=recode(biosample_mom_baby,
                       "mom"="0",
                       "baby"="1"),
          biosample_aliquot_type=recode(biosample_aliquot_type,
@@ -156,24 +136,17 @@ df[is.na(df)] <- " "
 df1=as.data.frame(df)
 
 # checks
-unique(df1$redcap_event_name)
-table(df1$redcap_event_name)
-table(df1$biosample_study_visit)
+table(df1$biosample_tube_type)
 
-# export test data: BLS001A
-redcap.bls001=df1%>%
-  filter(test_id=="BLS001A")%>%
-write_csv(path =paste0(work.dir,"redcap.bls001.csv",na = ""))
+# # export test data: BIS003A
+# redcap.bis003=df1%>%
+#   filter(record_id=="BIS003A")%>%
+# write_csv(path =paste0(work.dir,"redcap.bis003.csv",na = ""))
 
-# 
-
-# need to create a report with data that needs to be followed up.
-# output as html.
-
-# redcap_event_name
-# crc_specimen_number
-# crc_specimen_barcode
-# biosample_collection_date
+# export data: ALL
+redcap.import=df1%>%
+  #filter(record_id=="BIS003A")%>%
+  write_csv(path =paste0(work.dir,"redcap.freezerworks.import.csv",na = ""))
 
 
  
