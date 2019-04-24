@@ -14,13 +14,16 @@
     # email encounter: 74
     # other encounter: 2
     # NA encounter: 12
-# total phone screen:
+# total phone screen: 76
     # pass: 62
     # fail: 14
 # 47 participants consented
 # 40 participants completed interviews
 # 39 participants donated at least 1 sample
 # 23 participants donated all samples
+# completed 1+ questionnaire
+# completed ALL questionaires
+# complete data collection
 
 # **************************************************************************** #
 # ***************                Library                       *************** #
