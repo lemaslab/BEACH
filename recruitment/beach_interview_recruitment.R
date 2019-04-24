@@ -8,6 +8,10 @@
 # Project:     BEACH Interview
 # Description: Recruitment data and analysis
 
+# notes:
+
+# 23 donated all samples
+
 # **************************************************************************** #
 # ***************                Library                       *************** #
 # **************************************************************************** #
@@ -93,9 +97,9 @@ complete=dat %>%
 # how many donated all samples?
 table(complete$biosample_aliquot_type)
 all.samples=complete%>%
-  group_by(record_id)%>%
+  group_by(record_id,biosample_aliquot_type)%>%
   mutate(sample_count=length(unique(crc_specimen_barcode)))%>%
-  select(record_id,sample_count)%>%
+  select(record_id,biosample_aliquot_type,sample_count)%>%
   filter(sample_count=="5")
 length(unique(all.samples$record_id)) #23 contributed all samples
 dim(all.samples)
