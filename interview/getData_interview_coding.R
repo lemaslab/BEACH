@@ -9,13 +9,21 @@
 # Description: Randomly Select Participants for Coding
 
 # **************************************************************************** #
-# ***************                Library                       *************** #
+# ***************                Library/Functions             *************** #
 # **************************************************************************** #
 
 library(keyringr)
 library(tidyverse)
 library(redcapAPI)
 library(REDCapR)
+
+# outtersect function
+outersect <- function(x, y, ...) {
+  big.vec <- c(x, y, ...)
+  duplicates <- big.vec[duplicated(big.vec)]
+  return(setdiff(big.vec, unique(duplicates)))
+}
+
 
 # Login to Gatorlink VPN
 
@@ -78,15 +86,14 @@ code.now=dat%>%
 length(code.now) # 33 remaining 
 
 # select randomized participants
+# team 1
 t1=sample(code.now, size=11, replace=F);t1
 
-codes.left=intersect(code.now, t1)
+# team 2
+codes.left.t2=outersect(code.now, t1)
+t2=sample(codes.left.t2, size=11, replace=F);t2
 
-https://carleshf87.wordpress.com/2013/11/21/outersection-in-r/
-
-austen=sample(code.now, size=3, replace=F) 
-
- 
-
+# team 3
+codes.left.t3=outersect(codes.left.t2, t2)
 
 
