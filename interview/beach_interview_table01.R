@@ -38,7 +38,7 @@ exportInstruments(rcon)
 # export field names
 exportFieldNames(rcon)
 
-# Variables
+# Variables for table 01 
 desired_fields_v1 <- c("record_id","int_study_grp","interphone_date","int_consent_date","int_consent_complete",
                        "beach_interview_phone_screen_complete","int_phone_pass_fail",
                        "int_interview_date","int_interview_complete","int_audio_length_min", # study 
@@ -75,26 +75,26 @@ dat$interphone_date=as.Date(dat$interphone_date, "%Y-%m-%d")
 dat$encounter_date_int=as.Date(dat$encounter_date_int, "%Y-%m-%d")
 dat$biosample_collection_date=as.Date(dat$biosample_collection_date, "%Y-%m-%d")
 
+# this data includes ALL observations
+# all encounters (n=103)
+# consented (n=X)
+# consented and completed (n=40)
 
+# limit data to include only those participants that completed the interview
+dat.c=dat %>%
+  filter(int_interview_complete==1)
 
+names(dat.c)  
+length(dat.c) # 40
 
-
-# "BIS002A" "BIS004A" "BIS005A" "BIS023A" "BIS025A" "BIS032A"
-# "BIS034A"
-
-# how many have completed the interview
-complete=dat %>%
-  filter(int_interview_complete==1)%>%
-  pull(record_id)
-length(complete) # 40
-
-# table 1. 
+# example
 
 data(tips, package = "reshape2")
 glimpse(tips)
+str(tips)
 
 tips %>% 
-  select(tip, total_bill, sex) %>% 
+  select(total_bill, sex) %>% 
   gather(key = variable, value = value, -sex) %>% 
   group_by(sex, variable) %>% 
   summarise(value = list(value)) %>% 
@@ -104,16 +104,38 @@ tips %>%
          t_value = t.test(unlist(Female), unlist(Male))$statistic)
 
 
-# what is difference in interview time? p=0.6
-dat %>%
+# table 1. 
+names(dat.c)
+str(dat.c)
+# convert group variable to factor (1=pregnant, 2=breastfeeding)
+dat.c$int_study_grp=as.factor(dat.c$int_study_grp)
+dat.c$int_audio_length_min
+length((dat.c$int_audio_length_min)
+
+# what is statistical difference between continuous outcomes? 
+# Approach 1
+dat.c %>% 
+  select(int_audio_length_min, int_study_grp) %>% 
+  gather(key = variable, value = value, -int_study_grp) %>% 
+  group_by(int_study_grp, variable) %>% 
+  summarise(value = list(value)) %>% 
+  spread(int_study_grp, value) %>% 
+  group_by(variable) %>% 
+  mutate(mean_01=t.test(unlist(`1`), unlist(`2`))$estimate[1],
+         sd_01=sd(unlist(`1`)),
+         mean_02=t.test(unlist(`1`), unlist(`2`))$estimate[2],
+         sd_02=sd(unlist(`2`)),
+         p_value = t.test(unlist(`1`), unlist(`2`))$p.value,
+         t_value = t.test(unlist(`1`), unlist(`2`))$statistic)
+
+# Approach 2
+dat.c %>%
   group_by(int_study_grp)%>%
   summarize(mean_audio=mean(int_audio_length_min, na.rm = TRUE))
   t.test(int_audio_length_min ~ int_study_grp, data = dat)%>%
     tidy()
 
-dat%>%
-  group_by(int_study_grp)%>%
-  summarize(mean_audio=mean(int_audio_length_min, na.rm = TRUE))
+
 
 # table: "interphone_age","mom3t_prepreg_bmi",
 # "mompa_walk_slow","mompa_walk_quick", "mompa_walk_hills", 
