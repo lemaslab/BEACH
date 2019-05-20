@@ -75,13 +75,6 @@ dat$interphone_date=as.Date(dat$interphone_date, "%Y-%m-%d")
 dat$encounter_date_int=as.Date(dat$encounter_date_int, "%Y-%m-%d")
 dat$biosample_collection_date=as.Date(dat$biosample_collection_date, "%Y-%m-%d")
 
-
-
-
-
-# "BIS002A" "BIS004A" "BIS005A" "BIS023A" "BIS025A" "BIS032A"
-# "BIS034A"
-
 # how many have completed the interview
 complete=dat %>%
   filter(int_interview_complete==1)%>%

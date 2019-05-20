@@ -87,7 +87,9 @@ length(code.now) # 33 remaining
 
 # select randomized participants
 # team 1
-t1=sample(code.now, size=11, replace=F);t1
+t1=sample(code.now, size=8, replace=F);t1
+# [1] "BIS024A" "PRG006"  "PRG012"  "PRG013"  "BIS018A" "PRG017" 
+# [7] "PRG003"  "PRG016"
 
 # team 2
 codes.left.t2=outersect(code.now, t1)
