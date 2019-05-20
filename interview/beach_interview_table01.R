@@ -75,7 +75,6 @@ dat$interphone_date=as.Date(dat$interphone_date, "%Y-%m-%d")
 dat$encounter_date_int=as.Date(dat$encounter_date_int, "%Y-%m-%d")
 dat$biosample_collection_date=as.Date(dat$biosample_collection_date, "%Y-%m-%d")
 
-<<<<<<< HEAD
 # how many have completed the interview
 complete=dat %>%
   filter(int_interview_complete==1)%>%
@@ -83,13 +82,13 @@ complete=dat %>%
 length(complete) # 40
 
 # table 1. 
-=======
+# =======
 # this data includes ALL observations
 # all encounters (n=103)
 # consented (n=X)
 # consented and completed (n=40)
 
-# limit data to include only those participants that completed the interview
+# limit data to include only interview participants (n=40)
 dat.c=dat %>%
   filter(int_interview_complete==1)
 
@@ -97,8 +96,6 @@ names(dat.c)
 length(dat.c) # 40
 
 # example
->>>>>>> 1d2c83fb23562d41d0df57c2f609020d340cec2b
-
 data(tips, package = "reshape2")
 glimpse(tips)
 str(tips)
@@ -120,12 +117,12 @@ str(dat.c)
 # convert group variable to factor (1=pregnant, 2=breastfeeding)
 dat.c$int_study_grp=as.factor(dat.c$int_study_grp)
 dat.c$int_audio_length_min
-length((dat.c$int_audio_length_min)
+length((dat.c$int_audio_length_min))
 
 # what is statistical difference between continuous outcomes? 
 # Approach 1
 dat.c %>% 
-  select(int_audio_length_min, int_study_grp) %>% 
+  select(int_audio_length_min,interphone_prepreg_bmi,interphone_age, int_study_grp) %>% 
   gather(key = variable, value = value, -int_study_grp) %>% 
   group_by(int_study_grp, variable) %>% 
   summarise(value = list(value)) %>% 
