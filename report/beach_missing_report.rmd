@@ -44,7 +44,7 @@ head(dat); str(dat); names(dat)
 ```
 ## Where was your baby delivered: 3rd Trimester?
 
-```{r, echo = TRUE}
+```{r, echo=FALSE}
 delivery.3t=dat%>%
     filter(redcap_event_name=="third_trimester_arm_1")%>%
    select(mom3t_delivery_location)
@@ -52,7 +52,7 @@ delivery.3t=dat%>%
   
 ```
 ## Where was your baby delivered: 2-week?
-```{r, echo = TRUE}
+```{r, echo=FALSE}
 dat%>%
     filter(redcap_event_name=="two_week_arm_1")%>%
     select(test_id,inf2wk_delivery_location___1, 
@@ -68,3 +68,4 @@ dat%>%
     gather(test, value, UFHealth_Shands:i_dont_know)%>%
     mutate(delivery.2wk=ifelse(value>0,test, NA))
 ```
+
