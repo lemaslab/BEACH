@@ -1,0 +1,70 @@
+---
+title: "BEACH Missing Hospital Report"
+author: "Dominick Lemas"
+date: "March 28, 2019"
+output: html_document
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, include = FALSE}
+
+# library
+library(keyringr)
+library(redcapAPI)
+library(REDCapR)
+library(dplyr)
+library(tidyr)
+
+# Get Redcap API Token
+# # https://cran.r-project.org/web/packages/keyringr/vignettes/Avoiding_plain_text_passwords_in_R_with_keyringr.html
+credential_label <- "beach_api"
+credential_path <- paste(Sys.getenv("USERPROFILE"), '\\DPAPI\\passwords\\', Sys.info()["nodename"], '\\', credential_label, '.txt', sep="")
+uri <- "https://redcap.ctsi.ufl.edu/redcap/api/"
+beach_token<-decrypt_dpapi_pw(credential_path)
+print(beach_token)
+
+# records to pull
+desired_records_v1 <- c("BLS001A")
+desired_fields_v1 <- c("test_id", "redcap_event_name", "mom3t_delivery_location", "inf2wk_delivery_location")
+
+ds_some_rows_v1 <- redcap_read(
+  redcap_uri = uri, 
+  token      = beach_token, 
+  records    = desired_records_v1,
+  fields     = desired_fields_v1
+)$data
+
+# look at data
+dat=ds_some_rows_v1
+head(dat); str(dat); names(dat)
+```
+## Where was your baby delivered: 3rd Trimester?
+
+```{r, echo = TRUE}
+delivery.3t=dat%>%
+    filter(redcap_event_name=="third_trimester_arm_1")%>%
+   select(mom3t_delivery_location)
+  print(delivery.3t)
+  
+```
+## Where was your baby delivered: 2-week?
+```{r, echo = TRUE}
+dat%>%
+    filter(redcap_event_name=="two_week_arm_1")%>%
+    select(test_id,inf2wk_delivery_location___1, 
+         inf2wk_delivery_location___2,
+         inf2wk_delivery_location___3,
+         inf2wk_delivery_location___4,
+         inf2wk_delivery_location___5)%>%
+    rename(UFHealth_Shands=inf2wk_delivery_location___1,
+           NorthFlorida=inf2wk_delivery_location___2,
+           BirthCenter=inf2wk_delivery_location___3,
+           other=inf2wk_delivery_location___4,
+           i_dont_know=inf2wk_delivery_location___5)%>%
+    gather(test, value, UFHealth_Shands:i_dont_know)%>%
+    mutate(delivery.2wk=ifelse(value>0,test, NA))
+```
