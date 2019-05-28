@@ -95,21 +95,6 @@ dat.c=dat %>%
 names(dat.c)  
 length(dat.c) # 40
 
-# example
-data(tips, package = "reshape2")
-glimpse(tips)
-str(tips)
-
-tips %>% 
-  select(total_bill, sex) %>% 
-  gather(key = variable, value = value, -sex) %>% 
-  group_by(sex, variable) %>% 
-  summarise(value = list(value)) %>% 
-  spread(sex, value) %>% 
-  group_by(variable) %>% 
-  mutate(p_value = t.test(unlist(Female), unlist(Male))$p.value,
-         t_value = t.test(unlist(Female), unlist(Male))$statistic)
-
 
 # table 1. 
 names(dat.c)
@@ -135,19 +120,33 @@ dat.c %>%
          p_value = t.test(unlist(`1`), unlist(`2`))$p.value,
          t_value = t.test(unlist(`1`), unlist(`2`))$statistic)
 
+# Breastfeeding Group: 
+# mean/sd for breastfeeding group
+dat.c%>%
+  filter(int_study_grp=="2")%>%
+  summarize(bmi_mean=mean(interphone_prepreg_bmi, na.rm = TRUE),
+            bmi_sd=sd(interphone_prepreg_bmi, na.rm = TRUE),
+            age_mean=mean(interphone_age, na.rm = TRUE),
+            age_sd=sd(interphone_age, na.rm = TRUE),
+            audio_mean=mean(int_audio_length_min, na.rm = TRUE),
+            audio_sd=sd(int_audio_length_min, na.rm = TRUE))
+
+# All
+dat.c%>%
+  summarize(bmi_mean=mean(interphone_prepreg_bmi, na.rm = TRUE),
+            bmi_sd=sd(interphone_prepreg_bmi, na.rm = TRUE),
+            age_mean=mean(interphone_age, na.rm = TRUE),
+            age_sd=sd(interphone_age, na.rm = TRUE),
+            audio_mean=mean(int_audio_length_min, na.rm = TRUE),
+            audio_sd=sd(int_audio_length_min, na.rm = TRUE))
+
+
 # Approach 2
 dat.c %>%
   group_by(int_study_grp)%>%
   summarize(mean_audio=mean(int_audio_length_min, na.rm = TRUE))
   t.test(int_audio_length_min ~ int_study_grp, data = dat)%>%
     tidy()
-
-
-
-# table: "interphone_age","mom3t_prepreg_bmi",
-# "mompa_walk_slow","mompa_walk_quick", "mompa_walk_hills", 
-# "mompa_jog", "mompa_prenatal_exer", "mompa_swim","mompa_dance"
-
 
 # https://stats.stackexchange.com/questions/168378/applying-two-sample-t-test-comparing-multiple-groups-in-two-categories
 # https://sebastiansauer.github.io/multiple-t-tests-with-dplyr/
