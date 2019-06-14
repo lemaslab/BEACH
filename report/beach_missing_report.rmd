@@ -28,7 +28,7 @@ beach_token<-decrypt_dpapi_pw(credential_path)
 print(beach_token)
 
 # records to pull
-desired_records_v1 <- c("BLS001A")
+desired_records_v1 <- c("BLS012A")
 desired_fields_v1 <- c("test_id", "redcap_event_name", "mom3t_delivery_location", "inf2wk_delivery_location")
 
 ds_some_rows_v1 <- redcap_read(
@@ -65,7 +65,7 @@ dat%>%
            BirthCenter=inf2wk_delivery_location___3,
            other=inf2wk_delivery_location___4,
            i_dont_know=inf2wk_delivery_location___5)%>%
-    gather(test, value, UFHealth_Shands:i_dont_know)%>%
+    gather(delivery_location, value, UFHealth_Shands:i_dont_know)%>%
     mutate(delivery.2wk=ifelse(value>0,test, NA))
 ```
 
