@@ -18,6 +18,7 @@ library(tidyverse)
 library(redcapAPI)
 library(REDCapR)
 library(broom)
+library(dplyr)
 
 # Login to Gatorlink VPN
 
@@ -83,13 +84,6 @@ complete=dat %>%
   pull(record_id)
 length(complete) # 40
 
-# table 1. 
-# =======
-# this data includes ALL observations
-# all encounters (n=103)
-# consented (n=X)
-# consented and completed (n=40)
-
 # limit data to include only interview participants (n=40)
 dat.c=dat %>%
   filter(int_interview_complete==1)
@@ -105,50 +99,40 @@ dat.c$int_study_grp=as.factor(dat.c$int_study_grp)
 dat.c$int_audio_length_min
 length((dat.c$int_audio_length_min))
 
-# what is statistical difference between continuous outcomes? 
-# Approach 1
+# distribution of maternal age categories 
+# (1, <20 | 2, 20-30 | 3, 31-40 | 4, >40)
+range(dat.c$analysis_mat_age) # 21 39
 dat.c %>% 
-  select(int_audio_length_min,interphone_prepreg_bmi,interphone_age, int_study_grp) %>% 
-  gather(key = variable, value = value, -int_study_grp) %>% 
-  group_by(int_study_grp, variable) %>% 
-  summarise(value = list(value)) %>% 
-  spread(int_study_grp, value) %>% 
-  group_by(variable) %>% 
-  mutate(mean_01=t.test(unlist(`1`), unlist(`2`))$estimate[1],
-         sd_01=sd(unlist(`1`)),
-         mean_02=t.test(unlist(`1`), unlist(`2`))$estimate[2],
-         sd_02=sd(unlist(`2`)),
-         p_value = t.test(unlist(`1`), unlist(`2`))$p.value,
-         t_value = t.test(unlist(`1`), unlist(`2`))$statistic)
+  select(analysis_mat_age_cats) %>% 
+  group_by(analysis_mat_age_cats) %>%
+  summarise (n = n()) %>%
+  mutate(freq = n / sum(n))
 
-# Breastfeeding Group: 
-# mean/sd for breastfeeding group
-dat.c%>%
-  filter(int_study_grp=="2")%>%
-  summarize(bmi_mean=mean(interphone_prepreg_bmi, na.rm = TRUE),
-            bmi_sd=sd(interphone_prepreg_bmi, na.rm = TRUE),
-            age_mean=mean(interphone_age, na.rm = TRUE),
-            age_sd=sd(interphone_age, na.rm = TRUE),
-            audio_mean=mean(int_audio_length_min, na.rm = TRUE),
-            audio_sd=sd(int_audio_length_min, na.rm = TRUE))
+# distribution of maternal bmi categories 
+# (1, <25 | 2, 25-30 | 3, >30)
+range(dat.c$analysis_bmi) # 18.5 48.1
+dat.c %>% 
+  select(analysis_bmi_cats) %>% 
+  group_by(analysis_bmi_cats) %>%
+  summarise (n = n()) %>%
+  mutate(freq = n / sum(n))
 
-# All
-dat.c%>%
-  summarize(bmi_mean=mean(interphone_prepreg_bmi, na.rm = TRUE),
-            bmi_sd=sd(interphone_prepreg_bmi, na.rm = TRUE),
-            age_mean=mean(interphone_age, na.rm = TRUE),
-            age_sd=sd(interphone_age, na.rm = TRUE),
-            audio_mean=mean(int_audio_length_min, na.rm = TRUE),
-            audio_sd=sd(int_audio_length_min, na.rm = TRUE))
+# # distribution of maternal education categories 
+# 1, <8th grade | 2, Some high school | 3, High school diploma/GED 
+# 4, Some college or community college | 5, Associates degree | 
+# 6, Completed tech or vocational school | 7, College graduate | 
+# 8, Some graduate or professional school | 9, Graduate/professional degree
+dat.c %>% 
+  select(mom3t_education_2) %>% 
+  group_by(mom3t_education_2) %>%
+  summarise (n = n()) %>%
+  mutate(freq = n / sum(n))
 
+# distribution of previous research experience analysis_research_expr
+dat.c %>% 
+  select(analysis_research_expr) %>% 
+  group_by(analysis_research_expr) %>%
+  summarise (n = n()) %>%
+  mutate(freq = n / sum(n))
 
-# Approach 2
-dat.c %>%
-  group_by(int_study_grp)%>%
-  summarize(mean_audio=mean(int_audio_length_min, na.rm = TRUE))
-  t.test(int_audio_length_min ~ int_study_grp, data = dat)%>%
-    tidy()
-
-# https://stats.stackexchange.com/questions/168378/applying-two-sample-t-test-comparing-multiple-groups-in-two-categories
-# https://sebastiansauer.github.io/multiple-t-tests-with-dplyr/
-# https://cran.r-project.org/web/packages/broom/vignettes/broom_and_dplyr.html 
+names(dat.c)
