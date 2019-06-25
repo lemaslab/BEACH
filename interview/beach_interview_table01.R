@@ -96,8 +96,11 @@ names(dat.c)
 str(dat.c)
 # convert group variable to factor (1=pregnant, 2=breastfeeding)
 dat.c$int_study_grp=as.factor(dat.c$int_study_grp)
-dat.c$int_audio_length_min
-length((dat.c$int_audio_length_min))
+
+# range of interview audio
+range(dat.c$int_audio_length_min)  #24 81
+mean(dat.c$int_audio_length_min)  # 46.65
+sd(dat.c$int_audio_length_min)  # 12.43764
 
 # distribution of maternal age categories 
 # (1, <20 | 2, 20-30 | 3, 31-40 | 4, >40)

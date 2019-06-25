@@ -53,7 +53,9 @@ desired_fields_v1 <- c("record_id","int_study_grp","interphone_date","int_consen
                        "see_flyer_int", "flyer_other_int", "ufhealth_clinic_int","beach_interview_study_encounters_complete",
                        "analysis_mat_age", "analysis_mat_age_cats", "analysis_mat_age_source", "analysis_bmi",
                        "analysis_bmi_cats", "analysis_bmi_source", "mom3t_education_2", "analysis_research_expr",
-                       "analysis_kids_previous", "analysis_time_of_day","int_guide_stoolcollect")
+                       "analysis_kids_previous", "analysis_time_of_day","int_guide_transportation",
+                       "int_guide_stoolcollect", "int_guide_studylength", "int_guide_visitlength", "int_guide_visitlength",
+                       "int_guide_reminders","int_guide_contactby","int_guide_advanceremind")
 
 # pull data
 interview <- redcap_read(
@@ -88,79 +90,65 @@ length(complete) # 40
 dat.c=dat %>%
   filter(int_interview_complete==1)
 
-names(dat.c)  
-length(dat.c) # 40
-
-# table 1. 
+# table 2. 
 names(dat.c)
 str(dat.c)
 # convert group variable to factor (1=pregnant, 2=breastfeeding)
 dat.c$int_study_grp=as.factor(dat.c$int_study_grp)
-dat.c$int_audio_length_min
-length((dat.c$int_audio_length_min))
 
-# distribution of maternal age categories 
-# (1, <20 | 2, 20-30 | 3, 31-40 | 4, >40)
-range(dat.c$analysis_mat_age) # 21 39
+# range of study length (months)
+range(dat.c$int_guide_studylength, na.rm=T)  #2 60
+round(mean(dat.c$int_guide_studylength, na.rm=T),1)  # 24.7
+round(sd(dat.c$int_guide_studylength, na.rm=T),1)  # 18.9
+hist(dat.c$int_guide_studylength, na.rm=T)
+
+# range of visit number (count)
+range(dat.c$int_guide_transportation, na.rm=T)  #2 120
+round(mean(dat.c$int_guide_transportation, na.rm=T),1)  # 17.9
+round(sd(dat.c$int_guide_transportation, na.rm=T),1)  # 18.9
+hist(dat.c$int_guide_transportation, na.rm=T)
+
+# range of study visit length (minutes)
+range(dat.c$int_guide_visitlength, na.rm=T)  # 30 240
+round(mean(dat.c$int_guide_visitlength, na.rm=T),1)  # 81.2
+round(sd(dat.c$int_guide_visitlength, na.rm=T),1)  # 18.9
+hist(dat.c$int_guide_visitlength, na.rm=T)
+
+# distribution of stuy visit time of day categories 
+# (1, morning | 2, lunchtime | 3, afternoon)
+names(dat.c)
 dat.c %>% 
-  select(analysis_mat_age_cats) %>% 
-  group_by(analysis_mat_age_cats) %>%
-  summarise (n = n()) %>%
-  mutate(freq = n / sum(n))
+  select(record_id,analysis_time_of_day___1,analysis_time_of_day___2,analysis_time_of_day___3) %>% 
+  rename(morning=analysis_time_of_day___1, lunchtime=analysis_time_of_day___2,afternoon=analysis_time_of_day___3) %>%
+  gather(time_of_day, value, morning:afternoon) %>%
+  group_by(time_of_day) %>%
+  summarise(count = sum(value)) %>%
+  mutate(prop = prop.table(count))
 
-# distribution of maternal bmi categories 
-# (1, <25 | 2, 25-30 | 3, >30)
-range(dat.c$analysis_bmi) # 18.5 48.1
-dat.c %>% 
-  select(analysis_bmi_cats) %>% 
-  group_by(analysis_bmi_cats) %>%
-  summarise (n = n()) %>%
-  mutate(freq = n / sum(n))
-
-# # distribution of maternal education categories 
-# 1, <8th grade | 2, Some high school | 3, High school diploma/GED 
-# 4, Some college or community college | 5, Associates degree | 
-# 6, Completed tech or vocational school | 7, College graduate | 
-# 8, Some graduate or professional school | 9, Graduate/professional degree
-dat.c %>% 
-  select(mom3t_education_2) %>% 
-  group_by(mom3t_education_2) %>%
-  summarise (n = n()) %>%
-  mutate(freq = n / sum(n))
-
-# distribution of previous research experience 
+# distribution of study reminders 
 # 1, yes | 0, no
 dat.c %>% 
-  select(analysis_research_expr) %>% 
-  group_by(analysis_research_expr) %>%
+  select(int_guide_reminders) %>% 
+  group_by(int_guide_reminders) %>%
   summarise (n = n()) %>%
   mutate(freq = n / sum(n))
 
-# distribution of previous children 
-# 1, yes | 0, no
+# distribution of prefered contact method 
+# (1, text message | 2, phone call | 3, email | 4, by mail)
+names(dat.c)
 dat.c %>% 
-  select(analysis_kids_previous) %>% 
-  group_by(analysis_kids_previous) %>%
-  summarise (n = n()) %>%
-  mutate(freq = n / sum(n))
+  select(record_id,int_guide_contactby___1,int_guide_contactby___2,int_guide_contactby___3,int_guide_contactby___4) %>% 
+  rename(text_message=int_guide_contactby___1, phone_call=int_guide_contactby___2,email=int_guide_contactby___3, mail=int_guide_contactby___4) %>%
+  gather(method, value, text_message:mail) %>%
+  group_by(method) %>%
+  summarise(count = sum(value)) %>%
+  mutate(prop = prop.table(count))
 
-# distribution of previous children 
-# 1, yes | 0, no
-dat.c %>% 
-  select(analysis_kids_previous) %>% 
-  group_by(analysis_kids_previous) %>%
-  summarise (n = n()) %>%
-  mutate(freq = n / sum(n))
-
-# distribution of previous stool collection "int_guide_stoolcollect" 
-# 1, yes | 0, no
-dat.c %>% 
-  select(int_guide_stoolcollect) %>% 
-  group_by(int_guide_stoolcollect) %>%
-  summarise (n = n()) %>%
-  mutate(freq = n / sum(n))
-
-
+# range of advanced reminders (days)
+range(dat.c$int_guide_advanceremind, na.rm=T)  # 1 30
+round(mean(dat.c$int_guide_advanceremind, na.rm=T),1)  # 7
+round(sd(dat.c$int_guide_advanceremind, na.rm=T),1)  # 6.8
+hist(dat.c$int_guide_advanceremind, na.rm=T)
 
 
 names(dat.c)
