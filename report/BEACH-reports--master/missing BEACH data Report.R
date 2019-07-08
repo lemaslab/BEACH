@@ -1,3 +1,9 @@
+# **************************************************************************** #
+# ***************  Missing Report                                             
+# **************************************************************************** # 
+
+# notes: looks good. content needs to be organized as
+# rmd output.
 
 library(tidyr)
 library(dplyr)
@@ -107,7 +113,7 @@ DeliveryLocation_tri <-dat%>%
   select(test_id,redcap_event_name,mom3t_delivery_location)%>%
   arrange(test_id,redcap_event_name)%>%
   filter(redcap_event_name == "third_trimester_arm_1")
-kable(DeliveryLocation_tri)
+table(DeliveryLocation_tri)
 #Chart of Infant sex responses
 
 
