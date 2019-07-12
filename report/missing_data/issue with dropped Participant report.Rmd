@@ -74,7 +74,8 @@ head(ds_some_rows_v1)
 ```{r echo=FALSE}
 participants<-ds_some_rows_v1%>%
   select(test_id, beach_part_drop_out,redcap_event_name)%>%
-  distinct(test_id,beach_part_drop_out)
+  filter(redcap_event_name=="third_trimester_arm_1")%>%
+  select(test_id,beach_part_drop_out)
 kable(participants)
 ```
 
