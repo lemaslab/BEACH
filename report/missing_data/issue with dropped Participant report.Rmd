@@ -1,0 +1,102 @@
+---
+title: "Redcap report(issue trouble shoot)"
+author: "Luran M."
+date: "July 12, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+library(knitr, warn.conflicts = F, quietly = T)
+library(tidyr, warn.conflicts = F, quietly = T)
+library(dplyr, warn.conflicts = F, quietly = T)
+library(ggplot2, warn.conflicts = F, quietly = T)
+library(keyringr, warn.conflicts = F, quietly = T)
+library(redcapAPI, warn.conflicts = F, quietly = T)
+library(REDCapR, warn.conflicts = F, quietly = T)
+library(lubridate, warn.conflicts = F, quietly = T)
+
+#Create path to and api link to RedCaps
+# # https://cran.r-project.org/web/packages/keyringr/vignettes/Avoiding_plain_text_passwords_in_R_with_keyringr.html
+credential_label <- "beach_api"
+credential_path <- paste(Sys.getenv("USERPROFILE"), '\\DPAPI\\passwords\\', Sys.info()["nodename"], '\\', credential_label, '.txt', sep="")
+uri <- "https://redcap.ctsi.ufl.edu/redcap/api/"
+beach_token<-decrypt_dpapi_pw(credential_path)
+
+
+# Create connections
+rcon <- redcapConnection(url=uri, token=beach_token)
+
+# crc variables
+#fields <- exportFieldNames(rcon)
+#crc variables for Looking at dropped participants 
+
+desired_fields_dropped=c("beach_part_drop_out","beach_drop_reason","beach_last_visit","mom2wk_mod","mom3t_prepreg_bmi","inf2wk_delivery_location","mom3t_delivery_location")
+# combine desired fields and import test_id and redcap_event_name
+desired_fields_all=c(desired_fields_dropped,"test_id","redcap_event_name")
+
+# events to retain
+#exportEvents(rcon)
+events_to_retain  <- c("third_trimester_arm_1", "two_week_arm_1", "two_month_arm_1")
+
+# list of instruments
+#exportInstruments(rcon)
+Instruments_to_retain <- c("health_update_3rd_trimester_v5082518","clinical_health_update_2wk_v4_042218",
+                           "clinical_health_update_2mo_to_12mo_v3_022118","infant_feeding_questionnaire_2_weeks_v3_042218",
+                           "infant_feeding_questionnaire_2mo_to_12mo_v3_022118")
+
+# list of events
+#exportEvents(rcon)
+
+# list records
+#exportRecords(rcon)
+
+# export field names
+#exportFieldNames(rcon)
+
+# consented records
+consent.records.v1=c("BLS006A","BLS010A","BLS015A","BLS026A","BLS029A","BLS037A","BLS039A","BLS050A","BLS054A","BLS001A")
+
+# pull data
+ds_some_rows_v1 <- redcap_read(
+  batch_size=300,
+  records= consent.records.v1,
+  redcap_uri = uri, 
+  token      = beach_token, 
+  fields     = desired_fields_all,
+  events     = events_to_retain,
+  )$data
+
+head(ds_some_rows_v1)
+```
+
+##All Participants pulled
+```{r echo=FALSE}
+participants<-ds_some_rows_v1%>%
+  select(test_id, beach_part_drop_out,redcap_event_name)%>%
+  distinct(test_id,beach_part_drop_out)
+kable(participants)
+```
+
+##Dropped participants from the data pulled from Redcap
+```{r echo=FALSE}
+
+
+dropped_Participant<-ds_some_rows_v1%>%
+  select(test_id,beach_part_drop_out)%>%
+  filter(beach_part_drop_out==1)
+
+kable(dropped_Participant)
+
+```
+
+##the actual as described in Redcap
+```{r echo=FALSE}
+droppedP=c("BLS006A","BLS010A","BLS015A","BLS026A","BLS029A","BLS037A","BLS039A","BLS050A","BLS054A")
+true_dropped<-ds_some_rows_v1%>%
+  select(test_id)%>%
+  filter(test_id%in%droppedP)
+kable(droppedP)
+```
+
+##Specific Variable issue is beach_part_drop_out
