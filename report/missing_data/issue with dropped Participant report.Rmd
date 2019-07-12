@@ -28,31 +28,13 @@ beach_token<-decrypt_dpapi_pw(credential_path)
 rcon <- redcapConnection(url=uri, token=beach_token)
 
 # crc variables
-#fields <- exportFieldNames(rcon)
-#crc variables for Looking at dropped participants 
+desired_fields_dropped=c("test_id", "beach_part_drop_out", "beach_part_consent")
 
-desired_fields_dropped=c("beach_part_drop_out","beach_drop_reason","beach_last_visit","mom2wk_mod","mom3t_prepreg_bmi","inf2wk_delivery_location","mom3t_delivery_location")
-# combine desired fields and import test_id and redcap_event_name
-desired_fields_all=c(desired_fields_dropped,"test_id","redcap_event_name")
+
 
 # events to retain
-#exportEvents(rcon)
-events_to_retain  <- c("third_trimester_arm_1", "two_week_arm_1", "two_month_arm_1")
+events_to_retain  <- c("Baseline")
 
-# list of instruments
-#exportInstruments(rcon)
-Instruments_to_retain <- c("health_update_3rd_trimester_v5082518","clinical_health_update_2wk_v4_042218",
-                           "clinical_health_update_2mo_to_12mo_v3_022118","infant_feeding_questionnaire_2_weeks_v3_042218",
-                           "infant_feeding_questionnaire_2mo_to_12mo_v3_022118")
-
-# list of events
-#exportEvents(rcon)
-
-# list records
-#exportRecords(rcon)
-
-# export field names
-#exportFieldNames(rcon)
 
 # consented records
 consent.records.v1=c("BLS006A","BLS010A","BLS015A","BLS026A","BLS029A","BLS037A","BLS039A","BLS050A","BLS054A","BLS001A")
@@ -63,7 +45,7 @@ ds_some_rows_v1 <- redcap_read(
   records= consent.records.v1,
   redcap_uri = uri, 
   token      = beach_token, 
-  fields     = desired_fields_all,
+  fields     = desired_fields_dropped,
   events     = events_to_retain,
   )$data
 
@@ -74,7 +56,7 @@ head(ds_some_rows_v1)
 ```{r echo=FALSE}
 participants<-ds_some_rows_v1%>%
   select(test_id, beach_part_drop_out,redcap_event_name)%>%
-  filter(redcap_event_name=="third_trimester_arm_1")%>%
+  filter(beach_part_drop_out==1)%>%
   select(test_id,beach_part_drop_out)
 kable(participants)
 ```
