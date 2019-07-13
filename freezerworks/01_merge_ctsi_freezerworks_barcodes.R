@@ -6,6 +6,7 @@
 #' date: "July 11, 2019"
 #' ---
 
+# need data from freezerworks with aliquot type. 
 
 # **************************************************************************** #
 # ***************                Directory Variables           *************** #
@@ -35,60 +36,78 @@ library(dplyr)
 #------------------------
 ctsi.file.name="ctsi_barcodes_updated.csv";ctsi.file.name
 ctsi.file.path=paste0(work.dir,"export_ctsi_barcodes\\",ctsi.file.name);ctsi.file.path
-ctsi<- read_csv(ctsi.file.path);
+ctsi<- read_csv(ctsi.file.path) %>%
+  rename(clinic_visit=study_visit);
+
+# look at data
 head(ctsi); str(ctsi); names(ctsi)
+length(ctsi$Participant_ID)               # 2026
+length(unique(ctsi$crc_specimen_barcode)) # 2026
+length(unique(ctsi$Participant_ID))       # 95
 
 
 # Read Freezerworks Barcodes Data:
 #--------------------------------
 freezer.file.name="BEACH_Freezer_Export_13Feb19.txt";freezer.file.name
 freezer.file.path=paste0(work.dir,"export_freezerworks_barcodes\\",freezer.file.name);freezer.file.path
-freezer<- read_tsv(freezer.file.path);
+freezer<- read_tsv(freezer.file.path) %>%
+  select(crc_specimen_barcode,Participant_ID, clinic_visit_date,	clinic_visit, "Globally Unique Aliquot ID") %>%
+  rename(GUAliquotID="Globally Unique Aliquot ID") %>%
+  mutate(crc_specimen_barcode=as.character(crc_specimen_barcode))
+
+# look at data
 head(freezer); str(freezer); names(freezer)
+length(freezer$Participant_ID)               # 1860
+length(unique(freezer$crc_specimen_barcode)) # 1860
+length(unique(freezer$Participant_ID))       # 83
+
+
+# **************************************************************************** #
+# ***************               MERGE DATA SETS
+# **************************************************************************** # 
+
+str(ctsi)
+str(freezer)
+
+# freezerworks will be --> MERGED into CTSI. Size of data set will be CTSI # rows
+
+barcodes_merged=left_join(ctsi, freezer, by=c("Participant_ID","crc_specimen_barcode"))
+length(unique(barcodes_merged$crc_specimen_barcode)) # 2026
+length(unique(barcodes_merged$Participant_ID))       # 95
+head(barcodes_merged)
+names(barcodes_merged)
+str(barcodes_merged)
+
+
+
+### Start here ##
+
+# need to look for matches in dates and visits. 
+# identify those that dont match-- output to file. 
 
 
 # **************************************************************************** #
 # ***************  General data formatting                                             
 # **************************************************************************** # 
 
-names(dat)
+# minor format 
+barcodes_merged$clinic_visit_date.r=as.Date(barcodes_merged$clinic_visit_date.r, "%m/%d/%Y")
+barcodes_merged$clinic_visit_date=as.Date(barcodes_merged$clinic_visit_date, "%m/%d/%Y")
 
-# what is the ordering of variables
-unique(as.character(dat$Aliquot.Type))
-unique(as.character(dat$tube.type))
-table(dat$tube.type)
-table(dat$Freezer.Section)
+# format variables
+merge.r$clinic_visit.x=as.factor(merge.r$clinic_visit.x)
+merge.r$clinic_visit.y=as.factor(merge.r$clinic_visit.y)
 
-# change dates
-dat$Clinic.visit.date=as.Date(dat$Clinic.visit.date, "%m/%d/%Y")
-dim(dat) # 243
-length(unique(dat$Participant_ID)) #39
-names(dat)
-dat$Mom_Baby
+# check levels
+levels(merge.r$clinic_visit.x)
+levels(merge.r$clinic_visit.y)
 
-# drop NA observations
-dat.s=dat %>%
-  group_by(Participant_ID, clinic_visit) %>%
-  arrange(Clinic.visit.date) 
-  dim(dat.s) # 243
-  length(unique(dat.s$Participant_ID)) #39
-  names(dat.s)
-  
-# how many tubes per participant?
-part_count=dat.s %>%
-  group_by(Participant_ID) %>%
-  summarize(count=n_distinct(crc_specimen_barcode))
-  mean(part_count$count) # 6.23 tubes
+
+
+
             
-# how many sample types
-dat.s %>%
-  group_by(Aliquot.Type) %>%
-  summarize(count=n_distinct(crc_specimen_barcode))
 
-# how many tubes per sample type
-dat.s %>%
-  group_by(Freezer.Section) %>%
-  summarize(count=n_distinct(crc_specimen_barcode))
+
 
 # output data for import to redcap
 redcap=dat.s %>%

@@ -17,6 +17,8 @@
 # Notes: need to check infant blood cards in merge. Freezerworks should have 
 # more information on the sample type. 
 
+# change study visit --> clinic visit for freezerworks
+
 # **************************************************************************** #
 # ***************                Library                       *************** #
 # **************************************************************************** #
