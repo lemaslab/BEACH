@@ -1,9 +1,9 @@
 
 #' ---
-#' title: "Format freezerworks aliquot data for import to redcap"
+#' title: "Merge CTSI barcodes with Freezerworks"
 #' author: "Dominick Lemas"
-#' project: "BEACH Interview"
-#' date: "April 23, 2019"
+#' project: "BEACH Study"
+#' date: "July 11, 2019"
 #' ---
 
 
@@ -11,8 +11,8 @@
 # ***************                Directory Variables           *************** #
 # **************************************************************************** #
 
-work.dir=paste0(Sys.getenv("USERPROFILE"),"\\Dropbox (UFL)\\02_Projects\\FREEZERWORKS\\BEACH_interview\\");work.dir
-data.dir=paste0(Sys.getenv("USERPROFILE"),"\\Dropbox (UFL)\\02_Projects\\FREEZERWORKS\\BEACH_interview\\");data.dir
+work.dir=paste0(Sys.getenv("USERPROFILE"),"\\Dropbox (UFL)\\02_Projects\\FREEZERWORKS\\BEACH_Study\\");work.dir
+out.dir=paste0(Sys.getenv("USERPROFILE"),"\\Dropbox (UFL)\\02_Projects\\FREEZERWORKS\\BEACH_Study\\");work.dir
 
 # Set Working Directory
 setwd(work.dir)
@@ -28,17 +28,24 @@ library(tidyverse)
 library(dplyr)
 
 # **************************************************************************** #
-# ***************  Interview_Freezer_Export_11Apr19.cvs                                              
+# ***************                     READ Data                                              
 # **************************************************************************** # 
 
-# Read Data
-data.file.name="Interview_Freezer_Export_11Apr19.csv";data.file.name
-data.file.path=paste0(data.dir,"\\",data.file.name);data.file.path
-freezer<- read.csv(data.file.path);
+# Read CTSI Barcodes Data:
+#------------------------
+ctsi.file.name="ctsi_barcodes_updated.csv";ctsi.file.name
+ctsi.file.path=paste0(work.dir,"export_ctsi_barcodes\\",ctsi.file.name);ctsi.file.path
+ctsi<- read_csv(ctsi.file.path);
+head(ctsi); str(ctsi); names(ctsi)
 
-# look at data
-dat=freezer
-head(dat); str(dat); names(dat)
+
+# Read Freezerworks Barcodes Data:
+#--------------------------------
+freezer.file.name="BEACH_Freezer_Export_13Feb19.txt";freezer.file.name
+freezer.file.path=paste0(work.dir,"export_freezerworks_barcodes\\",freezer.file.name);freezer.file.path
+freezer<- read_tsv(freezer.file.path);
+head(freezer); str(freezer); names(freezer)
+
 
 # **************************************************************************** #
 # ***************  General data formatting                                             
