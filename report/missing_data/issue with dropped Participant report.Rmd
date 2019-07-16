@@ -33,7 +33,7 @@ desired_fields_dropped=c("test_id", "beach_part_drop_out", "beach_part_consent")
 
 
 # events to retain
-events_to_retain  <- c("Baseline")
+events_to_retain  <- c("baseline_arm_1")
 
 
 # consented records
