@@ -23,9 +23,9 @@ credential_path <- paste(Sys.getenv("USERPROFILE"), '\\DPAPI\\passwords\\', Sys.
 uri <- "https://redcap.ctsi.ufl.edu/redcap/api/"
 beach_token<-decrypt_dpapi_pw(credential_path)
 
-
 # Create connections
 rcon <- redcapConnection(url=uri, token=beach_token)
+
 
 # crc variables
 
@@ -42,25 +42,51 @@ events_to_retain  <- c("third_trimester_arm_1", "two_week_arm_1", "two_month_arm
 # consented records
 
 consent.records.v1=c("BLS006A","BLS010A","BLS015A","BLS026A","BLS029A","BLS037A","BLS039A","BLS050A","BLS054A","BLS001A")
+=======
+# variables
+desired_fields=c("test_id","redcap_event_name",
+                 "beach_part_drop_out",
+                 "beach_drop_reason",
+                 "beach_last_visit",
+                 "mom2wk_mod",
+                 "mom3t_prepreg_bmi",
+                 "inf2wk_delivery_location",
+                 "mom3t_delivery_location")
+
+# events 
+events <- c("third_trimester_arm_1", "two_week_arm_1")
+
+
+
+
+# consented records
+consent.records.v1=c("BLS006A",
+                     "BLS010A",
+                     "BLS015A",
+                     "BLS026A",
+                      "BLS029A",
+                      "BLS037A",
+                      "BLS039A",
+                     "BLS050A",
+                     "BLS054A",
+                     "BLS001A")
+
 
 # pull data
-ds_some_rows_v1 <- redcap_read(
+dat<- redcap_read(
   batch_size=300,
   records= consent.records.v1,
   redcap_uri = uri, 
   token      = beach_token, 
-  fields     = desired_fields_all,
-  events     = events_to_retain,
+  fields     = desired_fields,
+  events     = events,
   )$data
 
-head(ds_some_rows_v1)
+head(dat)
 ```
 
 ## Did Participant drop:
 ```{r echo=FALSE}
-participants_dropped<-ds_some_rows_v1%>%
-  select(test_id,beach_part_drop_out,redcap_event_name)%>%
-  filter(beach_part_drop_out==1,redcap_event_name=="baseline_arm_1")
 participant_dropped<-participants_dropped%>%
   select(test_id)%>%
   rename("Dropped Particpants"=test_id)
