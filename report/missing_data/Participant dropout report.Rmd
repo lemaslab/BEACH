@@ -42,7 +42,7 @@ events_to_retain  <- c("third_trimester_arm_1", "two_week_arm_1", "two_month_arm
 # consented records
 
 consent.records.v1=c("BLS006A","BLS010A","BLS015A","BLS026A","BLS029A","BLS037A","BLS039A","BLS050A","BLS054A","BLS001A")
-=======
+
 # variables
 desired_fields=c("test_id","redcap_event_name",
                  "beach_part_drop_out",
