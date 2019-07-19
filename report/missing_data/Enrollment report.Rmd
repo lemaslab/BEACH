@@ -59,7 +59,7 @@ head(ds_some_rows_v1)
 ##Mode of delivery for participant:
 
 ```{r echo=FALSE}
-mode_delevery<-ds_some_rows_v1%>%
+mode_delivery<-ds_some_rows_v1%>%
   select(test_id, mom2wk_mod,redcap_event_name)%>%
   filter(redcap_event_name=="two_week_arm_1")%>%
   rename("participant"=test_id,"Mode of Delivery"=mom2wk_mod)%>%
@@ -79,9 +79,10 @@ for(i in 1:nrow(mode_delivery)){
 ##Pre-pregnant BMI of participant:
 ```{r echo=FALSE}
 BMI <- ds_some_rows_v1%>%
-  select(test_id,mom3t_prepreg_bmi)%>%
-  filter(test_id%in%apple)%>%
-  rename("participant"=test_id,"pre-Pregnant BMI"=mom3t_prepreg_bmi)
+  select(test_id,mom3t_prepreg_bmi,redcap_event_name)%>%
+  filter(redcap_event_name=="third_trimester_arm_1")%>%
+  rename("participant"=test_id,"pre-Pregnant BMI"=mom3t_prepreg_bmi)%>%
+  select(participant,"pre-Pregnant BMI")
 kable(BMI)
 ```
 
