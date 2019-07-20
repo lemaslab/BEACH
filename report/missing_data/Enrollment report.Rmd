@@ -24,7 +24,7 @@ rcon <- redcapConnection(url=uri, token=beach_token)
 # crc variables
 #fields <- exportFieldNames(rcon)
 #crc variables for 3rd trimester visit
-desired_fields_enroll=c("mom2wk_mod","mom3t_prepreg_bmi","inf2wk_delivery_location","mom3t_delivery_location","beach_consent_date1")
+desired_fields_enroll=c("mom2wk_mod","mom3t_prepreg_bmi","inf2wk_delivery_location","mom3t_delivery_location","beach_consent_date1","mom3t_todays_date")
 # combine desired fields and import test_id and redcap_event_name
 desired_fields_all=c(desired_fields_enroll,"test_id","redcap_event_name")
 # events to retain
