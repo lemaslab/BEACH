@@ -8,6 +8,7 @@
 
 # need data from freezerworks with aliquot type. 
 
+
 # **************************************************************************** #
 # ***************                Directory Variables           *************** #
 # **************************************************************************** #
@@ -18,7 +19,6 @@ out.dir=paste0(Sys.getenv("USERPROFILE"),"\\Dropbox (UFL)\\02_Projects\\FREEZERW
 # Set Working Directory
 setwd(work.dir)
 list.files()
-
 
 # **************************************************************************** #
 # ***************                Library                       *************** #
@@ -37,29 +37,44 @@ library(dplyr)
 ctsi.file.name="ctsi_barcodes_updated.csv";ctsi.file.name
 ctsi.file.path=paste0(work.dir,"export_ctsi_barcodes\\",ctsi.file.name);ctsi.file.path
 ctsi<- read_csv(ctsi.file.path) %>%
-  rename(clinic_visit=study_visit);
+  select(-crc_specimen_number) %>%
+  rename(aliquot_type="specimen_type") %>%
+  mutate(crc_specimen_barcode=as.numeric(crc_specimen_barcode)) %>%
+  mutate(crc_specimen_barcode=as.character(crc_specimen_barcode))
 
 # look at data
 head(ctsi); str(ctsi); names(ctsi)
 length(ctsi$Participant_ID)               # 2026
 length(unique(ctsi$crc_specimen_barcode)) # 2026
 length(unique(ctsi$Participant_ID))       # 95
-
+unique(ctsi$aliquot_type)
 
 # Read Freezerworks Barcodes Data:
 #--------------------------------
-freezer.file.name="BEACH_Freezer_Export_13Feb19.txt";freezer.file.name
+freezer.file.name="Test_frzwks_export.txt";freezer.file.name
 freezer.file.path=paste0(work.dir,"export_freezerworks_barcodes\\",freezer.file.name);freezer.file.path
 freezer<- read_tsv(freezer.file.path) %>%
-  select(crc_specimen_barcode,Participant_ID, clinic_visit_date,	clinic_visit, "Globally Unique Aliquot ID") %>%
-  rename(GUAliquotID="Globally Unique Aliquot ID") %>%
+  rename(GUAliquotID="Globally Unique Aliquot ID",
+         tube_type="tube type",
+         aliquot_type="Aliquot Type",
+         clinic_visit_date="Clinic visit date",
+         freezer_section="Freezer Section",
+         project="Project",
+         sample_modified_by="Sample Modified By",
+         aliquot_modified_by="Aliquot Modified By",
+         aliquot_number="Aliquot Number",
+         mom_baby="Mom_Baby") %>%
+  select(crc_specimen_barcode,Participant_ID, clinic_visit_date,	clinic_visit, GUAliquotID, tube_type, aliquot_type) %>%
   mutate(crc_specimen_barcode=as.character(crc_specimen_barcode))
 
 # look at data
 head(freezer); str(freezer); names(freezer)
-length(freezer$Participant_ID)               # 1860
-length(unique(freezer$crc_specimen_barcode)) # 1860
-length(unique(freezer$Participant_ID))       # 83
+length(freezer$Participant_ID)               # 2109
+length(unique(freezer$crc_specimen_barcode)) # 2108
+length(unique(freezer$Participant_ID))       # 95
+unique(freezer$tube_type)
+unique(freezer$aliquot_type)
+unique(freezer$clinic_visit)
 
 
 # **************************************************************************** #
@@ -68,46 +83,111 @@ length(unique(freezer$Participant_ID))       # 83
 
 str(ctsi)
 str(freezer)
+length(intersect(ctsi$crc_specimen_barcode, freezer$crc_specimen_barcode))
 
 # freezerworks will be --> MERGED into CTSI. Size of data set will be CTSI # rows
 
-barcodes_merged=left_join(ctsi, freezer, by=c("Participant_ID","crc_specimen_barcode"))
+barcodes_merged=left_join(ctsi, freezer, by=c("crc_specimen_barcode"), suffix = c(".ctsi", ".frzwks"))
 length(unique(barcodes_merged$crc_specimen_barcode)) # 2026
-length(unique(barcodes_merged$Participant_ID))       # 95
 head(barcodes_merged)
 names(barcodes_merged)
 str(barcodes_merged)
 
-
-
-### Start here ##
-
-# need to look for matches in dates and visits. 
-# identify those that dont match-- output to file. 
-
+# variables that are duplicates in both "ctsi" and "freezer"
+# - clinic_visit_date
+# - clinic_visit
+# - aliquot_type
+# - Participant_ID
 
 # **************************************************************************** #
 # ***************  General data formatting                                             
 # **************************************************************************** # 
 
-# minor format 
-barcodes_merged$clinic_visit_date.r=as.Date(barcodes_merged$clinic_visit_date.r, "%m/%d/%Y")
-barcodes_merged$clinic_visit_date=as.Date(barcodes_merged$clinic_visit_date, "%m/%d/%Y")
+# dates 
+barcodes_merged$clinic_visit_date.ctsi=as.Date(barcodes_merged$clinic_visit_date.ctsi, "%m/%d/%Y")
+barcodes_merged$clinic_visit_date.frzwks=as.Date(barcodes_merged$clinic_visit_date.frzwks, "%m/%d/%Y")
 
-# format variables
-merge.r$clinic_visit.x=as.factor(merge.r$clinic_visit.x)
-merge.r$clinic_visit.y=as.factor(merge.r$clinic_visit.y)
+# factors
+barcodes_merged$clinic_visit.ctsi=as.factor(barcodes_merged$clinic_visit.ctsi)
+barcodes_merged$clinic_visit.frzwks=as.factor(barcodes_merged$clinic_visit.frzwks)
+
+barcodes_merged$aliquot_type.ctsi=as.factor(barcodes_merged$aliquot_type.ctsi)
+barcodes_merged$aliquot_type.frzwks=as.factor(barcodes_merged$aliquot_type.frzwks)
+
 
 # check levels
-levels(merge.r$clinic_visit.x)
-levels(merge.r$clinic_visit.y)
+levels(barcodes_merged$clinic_visit.ctsi)
+levels(barcodes_merged$clinic_visit.frzwks)
+
+levels(barcodes_merged$aliquot_type.ctsi)
+levels(barcodes_merged$aliquot_type.frzwks)
+
+
+# recode/reorder levels 
+df <- barcodes_merged %>%
+  mutate(clinic_visit.ctsi = factor(clinic_visit.ctsi, levels = c("3rd_trimester","2_week","2_months","12_months"))) %>%
+  mutate(clinic_visit.frzwks = factor(clinic_visit.frzwks, levels = c("3rd_trimester","2_week","2_months","12_months")))
+
+# check levels after recorde/reorder
+levels(df$clinic_visit.ctsi)
+levels(df$clinic_visit.frzwks)
+
+
+# **************************************************************************** #
+# ***************       CHECK DATA AGREEMENT B/W DUPLICATE VARIABLES                                             
+# **************************************************************************** # 
+
+### STOP ###
+
+# have you confirmed dates and participant ID's?
+
+# ID check
+df$flag_part_id=ifelse(df$Participant_ID.ctsi==df$Participant_ID.frzwks,"MATCH","NO_MATCH")
+table(df$flag_part_id)
+check_part_id=df %>%
+  filter(flag_part_id=="NO_MATCH") %>%
+  select(crc_specimen_barcode, Participant_ID.ctsi,clinic_visit.ctsi,clinic_visit_date.ctsi, 
+         Participant_ID.frzwks, clinic_visit.frzwks, clinic_visit_date.frzwks ) # 102 samples
+
+        # export data for confirmation
+        #-----------------------------
+        check.file.name.part_id="check_freezer_part_id_20July19.csv"  # need to add date dynamically
+        check.file.path=paste0(out.dir,"check_freezerworks\\",check.file.name.part_id);check.file.path
+        write.csv(check_part_id, file=check.file.path,row.names=FALSE)
+
+        # check file, confirm label on tube in frzwrks, then reference redcap. modify CTSI file.
+        
+
+# date check
+df$flag_date=ifelse(df$clinic_visit_date.ctsi==df$clinic_visit_date.frzwks,"MATCH","NO_MATCH")
+table(df$flag_date)
+check_dates=df %>%
+  filter(flag_date=="NO_MATCH") %>%
+  select(crc_specimen_barcode, Participant_ID.ctsi, clinic_visit_date.ctsi, clinic_visit_date.frzwks) # 4 dates
+      # export data for confirmation
+      #-----------------------------
+      check.file.name.dates="check_freezer_sample_date_20July19.csv"  # need to add date dynamically
+      check.file.path=paste0(out.dir,"check_freezerworks\\",check.file.name.dates);check.file.path
+      write.csv(check_dates, file=check.file.path,row.names=FALSE)
+
+      # check file, confirm date on tube in frzwrks, then reference redcap. modify CTSI file.
+      
+      
+# visit check
+df$flag_clinic_visit=ifelse(df$clinic_visit.ctsi==df$clinic_visit.frzwks,"MATCH","NO_MATCH")
+table(df$flag_clinic_visit)
+
+# after confirming the dates, part id, study visits, then create single variables for 
+# each variable to import into redcap. 
 
 
 
+# **************************************************************************** #
+# ***************       FORMAT DATA FOR IMPORT TO REDCAP & FREEZERWORKS                                             
+# **************************************************************************** # 
 
-            
-
-
+# Once above is completed, start here
+names(df)
 
 # output data for import to redcap
 redcap=dat.s %>%
