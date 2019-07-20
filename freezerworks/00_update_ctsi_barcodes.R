@@ -13,11 +13,12 @@
 
 # Obj: merged CRC lab file with new samples collected.
 
+# Status: operational, need to change study visit --> clinic visit for freezerworks
 
 # Notes: need to check infant blood cards in merge. Freezerworks should have 
 # more information on the sample type. 
 
-# change study visit --> clinic visit for freezerworks
+# 
 
 # **************************************************************************** #
 # ***************                Library                       *************** #
@@ -62,9 +63,9 @@ ctsi_new<- read_xlsx(ctsi.new.file.path, skip = 6) %>%
   mutate(specimen_type=ifelse(specimen_subtype_01 !="Unknown", specimen_subtype_01, specimen_subtype_02)) %>%
   select(-c(specimen_subtype_01,specimen_subtype_02)) %>%
     mutate(ctsi_followup=NA,
-           study_visit=NA) %>%
+           clinic_visit=NA) %>%
   select(crc_specimen_barcode, crc_specimen_number, Participant_ID, clinic_visit_date,    
-         study_visit, ctsi_followup, specimen_type);names(ctsi_new)
+         clinic_visit, ctsi_followup, specimen_type);names(ctsi_new)
 
 
 # OLD CTSI Barcode File:
@@ -78,7 +79,7 @@ ctsi_old<- read_xlsx(ctsi.old.file.path, skip = 6) %>%
          specimen_subtype_01=`Specimen Type`,
          specimen_subtype_02=`Timepoint Label`,
          ctsi_followup=CTSI_Followup,
-         study_visit=Study_Visit
+         clinic_visit=Study_Visit
          )%>%
   mutate(specimen_type=ifelse(specimen_subtype_01 !="Unknown", specimen_subtype_01, specimen_subtype_02))%>%
   select(-c(specimen_subtype_01,specimen_subtype_02));names(ctsi_old)
@@ -122,7 +123,7 @@ head(ctsi_merged)
 names(ctsi_merged)
 str(ctsi_merged)
 
-## WORK IN PROGRESS ####
+## WORK IN PROGRESS: would rather merge than rbind. need to check for duplicates/overlap ####
 
 # # Obj: MERGE new file --> into old file. Need to work out kinks. 
 # I was able to rbind because no sample overlapped. If there were overlapping
@@ -148,27 +149,26 @@ ctsi_merged$clinic_visit_date=as.Date(ctsi_merged$clinic_visit_date, "%m/%d/%Y")
 # factors
 #--------
 # study_visit
-ctsi_merged$study_visit=as.factor(ctsi_merged$study_visit)
+ctsi_merged$clinic_visit=as.factor(ctsi_merged$clinic_visit)
   # check levels
-    levels(ctsi_merged$study_visit)
+    levels(ctsi_merged$clinic_visit)
 
   # recode/reorder levels for freezerworks
   ctsi_updated <- ctsi_merged %>%
-  mutate(study_visit = recode(study_visit, 
+  mutate(clinic_visit = recode(clinic_visit, 
                           '3rd Trimester' = "3rd_trimester",
                           '2-week' = "2_week",
                           '2-month' = "2_months",
                           '12-month'="12_months")) %>%
-  mutate(study_visit = factor(study_visit, levels = c("3rd_trimester","2_week","2_months","12_months"))) %>%
+  mutate(clinic_visit = factor(clinic_visit, levels = c("3rd_trimester","2_week","2_months","12_months"))) %>%
   drop_na(Participant_ID, crc_specimen_barcode)  # drop rows with no part_id and barcode. 
   
 # **************************************************************************** #
 # ***************          FINAL CHECKS ON DATA
 # **************************************************************************** #
   
-  
 # Fincheck levels after recorde/reorder
-  levels(ctsi_updated$study_visit)
+  levels(ctsi_updated$clinic_visit)
 
   length(unique(ctsi_updated$Participant_ID)) #95
   length(unique(ctsi_updated$crc_specimen_barcode)) # 2026
@@ -177,7 +177,6 @@ ctsi_merged$study_visit=as.factor(ctsi_merged$study_visit)
 # **************************************************************************** #
 # ***************  Export data set
 # **************************************************************************** #
-
 
 merged.file.name="ctsi_barcodes_updated.csv"
 merge.file.path=paste0(out.dir,merged.file.name);merge.file.path
