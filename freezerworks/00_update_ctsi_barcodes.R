@@ -38,12 +38,9 @@ library(readxl)
 work.dir=paste0(Sys.getenv("USERPROFILE"),"\\Dropbox (UFL)\\02_Projects\\FREEZERWORKS\\BEACH_Study\\export_ctsi_barcodes\\");work.dir
 out.dir=paste0(Sys.getenv("USERPROFILE"),"\\Dropbox (UFL)\\02_Projects\\FREEZERWORKS\\BEACH_Study\\export_ctsi_barcodes\\");work.dir
 
-
 # Set Working Directory
 setwd(work.dir)
 list.files()
-
-
 
 # **************************************************************************** #
 # ***************                     READ Data                                              
@@ -53,22 +50,24 @@ list.files()
 data.file.name.ctsi.update="noPHI_1158Lemas_11June19.xlsx";data.file.name.ctsi.update
 ctsi.new.file.path=paste0(work.dir,"raw_data\\",data.file.name.ctsi.update);ctsi.new.file.path
 ctsi_new<- read_xlsx(ctsi.new.file.path, skip = 6) %>%
-  rename(crc_specimen_barcode=`Specimen Bar Code`, 
+  rename(crc_specimen_barcode=`Specimen Bar Code`,                    # rename variables
          crc_specimen_number=`Specimen No.`,
          Participant_ID=`Sequence Number`,
          clinic_visit_date=`Collection Date`,
          specimen_subtype_01=`Specimen Type`,
          specimen_subtype_02=`Timepoint Label`
          ) %>%
-  mutate(specimen_type=ifelse(specimen_subtype_01 !="Unknown", specimen_subtype_01, specimen_subtype_02)) %>%
-  select(-c(specimen_subtype_01,specimen_subtype_02)) %>%
+  mutate(specimen_type=ifelse(specimen_subtype_01 !="Unknown",      # variable with tissue type 
+                              specimen_subtype_01, 
+                              specimen_subtype_02)) %>%
+  select(-c(specimen_subtype_01,specimen_subtype_02)) %>%           # drop tmp variables
     mutate(ctsi_followup=NA,
            clinic_visit=NA) %>%
   select(crc_specimen_barcode, crc_specimen_number, Participant_ID, clinic_visit_date,    
          clinic_visit, ctsi_followup, specimen_type);names(ctsi_new)
 
 
-# OLD CTSI Barcode File:
+# OLD MODIFIED CTSI Barcode File:
 data.file.name.ctsi.old="noPHI_1158Lemas_06Sept18_LCedits.xlsx";data.file.name.ctsi.old
 ctsi.old.file.path=paste0(work.dir,data.file.name.ctsi.old);ctsi.old.file.path
 ctsi_old<- read_xlsx(ctsi.old.file.path, skip = 6) %>%
@@ -122,6 +121,11 @@ length(unique(ctsi_merged$Participant_ID))       # 95
 head(ctsi_merged)
 names(ctsi_merged)
 str(ctsi_merged)
+
+# jointdataset <- merge(ctsi_old, ctsi_new, by = 'crc_specimen_barcode', all=TRUE, suffix = c(".old", ".new"))  # I think this is correct
+# length(unique(jointdataset$crc_specimen_barcode)) # 2026 - checked                # need to check
+# length(intersect(jointdataset$crc_specimen_barcode, ctsi_merged$crc_specimen_barcode))  # 2026
+
 
 ## WORK IN PROGRESS: would rather merge than rbind. need to check for duplicates/overlap ####
 

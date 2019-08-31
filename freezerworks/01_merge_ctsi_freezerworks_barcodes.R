@@ -6,9 +6,6 @@
 #' date: "July 11, 2019"
 #' ---
 
-# need data from freezerworks with aliquot type. 
-
-
 # **************************************************************************** #
 # ***************                Directory Variables           *************** #
 # **************************************************************************** #
@@ -19,6 +16,8 @@ out.dir=paste0(Sys.getenv("USERPROFILE"),"\\Dropbox (UFL)\\02_Projects\\FREEZERW
 # Set Working Directory
 setwd(work.dir)
 list.files()
+
+# need dynamic date variable to include in file names. I have this in other code. 
 
 # **************************************************************************** #
 # ***************                Library                       *************** #
@@ -51,7 +50,7 @@ unique(ctsi$aliquot_type)
 
 # Read Freezerworks Barcodes Data:
 #--------------------------------
-freezer.file.name="Test_frzwks_export.txt";freezer.file.name
+freezer.file.name="freezerworks_export.txt";freezer.file.name
 freezer.file.path=paste0(work.dir,"export_freezerworks_barcodes\\",freezer.file.name);freezer.file.path
 freezer<- read_tsv(freezer.file.path) %>%
   rename(GUAliquotID="Globally Unique Aliquot ID",
@@ -69,29 +68,63 @@ freezer<- read_tsv(freezer.file.path) %>%
 
 # look at data
 head(freezer); str(freezer); names(freezer)
-length(freezer$Participant_ID)               # 2109
-length(unique(freezer$crc_specimen_barcode)) # 2108
-length(unique(freezer$Participant_ID))       # 95
+length(freezer$Participant_ID)               # 2200
+length(unique(freezer$crc_specimen_barcode)) # 2198
+length(unique(freezer$Participant_ID))       # 99
 unique(freezer$tube_type)
 unique(freezer$aliquot_type)
 unique(freezer$clinic_visit)
 
+# **************************************************************************** #
+# ***************  Outersect Analysi
+# **************************************************************************** #
+
+length(intersect(ctsi$crc_specimen_barcode, freezer$crc_specimen_barcode)) #1950 barcodes intersect
+
+# function to find those that dont have merge pair. need to move to utils.r
+outersect <- function(x, y, ...) {
+  big.vec <- c(x, y, ...)
+  duplicates <- big.vec[duplicated(big.vec)]
+  setdiff(big.vec, unique(duplicates))
+}
+
+# # this is list of barcodes that can't be merged.
+outersect.followup=outersect(ctsi$crc_specimen_barcode, freezer$crc_specimen_barcode) 
+length(outersect.followup)  # 323 barcodes dont have matchb/w redcap and freezerworks
+
+# formatt
+outersect.followup.df=outersect.followup %>%
+  as.data.frame() %>%
+  rename(crc_specimen_barcode=".")
+
+# export data
+merged.file.name="outersect_followup.csv"
+merge.file.path=paste0(out.dir,"followup_freezerworks\\",merged.file.name);merge.file.path
+write.csv(outersect.followup.df, file=merge.file.path,row.names=FALSE)
 
 # **************************************************************************** #
 # ***************               MERGE DATA SETS
 # **************************************************************************** # 
 
-str(ctsi)
-str(freezer)
-length(intersect(ctsi$crc_specimen_barcode, freezer$crc_specimen_barcode))
+# freezerworks will be --> MERGED into CTSI.
 
-# freezerworks will be --> MERGED into CTSI. Size of data set will be CTSI # rows
+# checks
+str(ctsi); length(unique(ctsi$crc_specimen_barcode)) # 2026
+str(freezer); length(unique(freezer$crc_specimen_barcode)) # 2198
+length(intersect(ctsi$crc_specimen_barcode, freezer$crc_specimen_barcode)) #1950 barcodes intersect
 
+# merge
 barcodes_merged=left_join(ctsi, freezer, by=c("crc_specimen_barcode"), suffix = c(".ctsi", ".frzwks"))
 length(unique(barcodes_merged$crc_specimen_barcode)) # 2026
 head(barcodes_merged)
 names(barcodes_merged)
 str(barcodes_merged)
+
+# export data
+merged.file.name="barcodes_merged.csv"
+merge.file.path=paste0(out.dir,"followup_freezerworks\\",merged.file.name);merge.file.path
+write.csv(barcodes_merged, file=merge.file.path,row.names=FALSE)
+
 
 # variables that are duplicates in both "ctsi" and "freezer"
 # - clinic_visit_date
