@@ -57,14 +57,14 @@ ctsi_new<- read_xlsx(ctsi.new.file.path, skip = 6) %>%
          specimen_subtype_01=`Specimen Type`,
          specimen_subtype_02=`Timepoint Label`
          ) %>%
-  mutate(specimen_type=ifelse(specimen_subtype_01 !="Unknown",      # variable with tissue type 
+  mutate(aliquot_type=ifelse(specimen_subtype_01 !="Unknown",      # variable with tissue type 
                               specimen_subtype_01, 
                               specimen_subtype_02)) %>%
   select(-c(specimen_subtype_01,specimen_subtype_02)) %>%           # drop tmp variables
     mutate(ctsi_followup=NA,
            clinic_visit=NA) %>%
   select(crc_specimen_barcode, crc_specimen_number, Participant_ID, clinic_visit_date,    
-         clinic_visit, ctsi_followup, specimen_type);names(ctsi_new)
+         clinic_visit, ctsi_followup, aliquot_type);names(ctsi_new)
 
 
 # OLD MODIFIED CTSI Barcode File:
@@ -80,7 +80,7 @@ ctsi_old<- read_xlsx(ctsi.old.file.path, skip = 6) %>%
          ctsi_followup=CTSI_Followup,
          clinic_visit=Study_Visit
          )%>%
-  mutate(specimen_type=ifelse(specimen_subtype_01 !="Unknown", specimen_subtype_01, specimen_subtype_02))%>%
+  mutate(aliquot_type=ifelse(specimen_subtype_01 !="Unknown", specimen_subtype_01, specimen_subtype_02))%>%
   select(-c(specimen_subtype_01,specimen_subtype_02));names(ctsi_old)
 
 
@@ -122,23 +122,11 @@ head(ctsi_merged)
 names(ctsi_merged)
 str(ctsi_merged)
 
-# jointdataset <- merge(ctsi_old, ctsi_new, by = 'crc_specimen_barcode', all=TRUE, suffix = c(".old", ".new"))  # I think this is correct
-# length(unique(jointdataset$crc_specimen_barcode)) # 2026 - checked                # need to check
+# I think this is correct. next session need to work into code formally
+#----------------------
+# jointdataset <- merge(ctsi_old, ctsi_new, by = 'crc_specimen_barcode', all=TRUE, suffix = c(".old", ".new"))  
+# length(unique(jointdataset$crc_specimen_barcode)) # 2026 - checked                
 # length(intersect(jointdataset$crc_specimen_barcode, ctsi_merged$crc_specimen_barcode))  # 2026
-
-
-## WORK IN PROGRESS: would rather merge than rbind. need to check for duplicates/overlap ####
-
-# # Obj: MERGE new file --> into old file. Need to work out kinks. 
-# I was able to rbind because no sample overlapped. If there were overlapping
-# samples there would then be duplicates. 
-# 
-# ctsi_merged=full_join(ctsi_old, ctsi_new, by="crc_specimen_barcode", copy = TRUE)
-# length(unique(ctsi_merged$crc_specimen_barcode)) # 2026 - checked
-# length(unique(ctsi_merged$Participant_ID))       # 95
-# head(ctsi_merged)
-# names(ctsi_merged)
-# str(ctsi_merged)
 
 # **************************************************************************** #
 # ***************             FORMATT Data FOR FREEZERWORKS                                             
@@ -165,7 +153,32 @@ ctsi_merged$clinic_visit=as.factor(ctsi_merged$clinic_visit)
                           '2-month' = "2_months",
                           '12-month'="12_months")) %>%
   mutate(clinic_visit = factor(clinic_visit, levels = c("3rd_trimester","2_week","2_months","12_months"))) %>%
-  drop_na(Participant_ID, crc_specimen_barcode)  # drop rows with no part_id and barcode. 
+  drop_na(Participant_ID, crc_specimen_barcode) %>%  # drop rows with no part_id and barcode. 
+  mutate(aliquot_type_tmp = recode(aliquot_type, 
+                                 'Plasma' = "plasma",
+                                 'Saliva' = "saliva",
+                                 'Urine' = "urine",
+                                 'Mucosal Scrapings'="vaginal",
+                                 'Stool'="stool",
+                                 'Whole Milk'="milk- whole",
+                                 'Skim Milk'="milk- skim",
+                                 'Milk Fat'="milk-lipid",
+                                 'Skim MIlk'="milk- skim",
+                                 'MIlk Fat'="milk-lipid",
+                                 'Whole Blood'="blood",
+                                 'Card'="blood",
+                                 'WB.Card'="blood",
+                                 'Spot Card'="blood",
+                                 'card'="blood",
+                                 'W.Milk'="milk- whole",
+                                 'S. Milk'="milk- skim",
+                                 'Milk fat'="milk-lipid",
+                                 'Formula'="formula"))
+    
+    
+  unique(ctsi_updated$aliquot_type_tmp)  # need to export and check.
+  
+  
   
 # **************************************************************************** #
 # ***************          FINAL CHECKS ON DATA
