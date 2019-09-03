@@ -184,7 +184,7 @@ ctsi_merged$clinic_visit=as.factor(ctsi_merged$clinic_visit)
 # ***************          FINAL CHECKS ON DATA
 # **************************************************************************** #
   
-# Fincheck levels after recorde/reorder
+# Final check levels after recorde/reorder
   levels(ctsi_updated$clinic_visit)
 
   length(unique(ctsi_updated$Participant_ID)) #95
