@@ -175,27 +175,22 @@ ctsi_merged$clinic_visit=as.factor(ctsi_merged$clinic_visit)
                                  'Milk fat'="milk-lipid",
                                  'Formula'="formula"))
     
-    
   unique(ctsi_updated$aliquot_type_tmp)  # need to export and check.
-  
-  
   
 # **************************************************************************** #
 # ***************          FINAL CHECKS ON DATA
 # **************************************************************************** #
   
-# Fincheck levels after recorde/reorder
+# Final check levels after recorde/reorder
   levels(ctsi_updated$clinic_visit)
 
   length(unique(ctsi_updated$Participant_ID)) #95
   length(unique(ctsi_updated$crc_specimen_barcode)) # 2026
   
-
 # **************************************************************************** #
 # ***************  Export data set
 # **************************************************************************** #
 
-merged.file.name="ctsi_barcodes_updated.csv"
+merged.file.name="ctsi_barcodes_updated_V0.csv"
 merge.file.path=paste0(out.dir,merged.file.name);merge.file.path
 write.csv(ctsi_updated, file=merge.file.path,row.names=FALSE)
-

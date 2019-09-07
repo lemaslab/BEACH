@@ -33,7 +33,7 @@ library(dplyr)
 
 # Read CTSI Barcodes Data:
 #------------------------
-ctsi.file.name="ctsi_barcodes_updated.csv";ctsi.file.name
+ctsi.file.name="ctsi_barcodes_updated_V0.csv";ctsi.file.name
 ctsi.file.path=paste0(work.dir,"export_ctsi_barcodes\\",ctsi.file.name);ctsi.file.path
 ctsi<- read_csv(ctsi.file.path) %>%
   select(-crc_specimen_number) %>%
