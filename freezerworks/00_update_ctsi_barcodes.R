@@ -147,6 +147,7 @@ ctsi_merged$clinic_visit=as.factor(ctsi_merged$clinic_visit)
 
   # recode/reorder levels for freezerworks
   ctsi_updated <- ctsi_merged %>%
+  rename(aliquot_type_tmp=aliquot_type) %>%            # rename aliquot type to tmp. 
   mutate(clinic_visit = recode(clinic_visit, 
                           '3rd Trimester' = "3rd_trimester",
                           '2-week' = "2_week",
@@ -154,7 +155,7 @@ ctsi_merged$clinic_visit=as.factor(ctsi_merged$clinic_visit)
                           '12-month'="12_months")) %>%
   mutate(clinic_visit = factor(clinic_visit, levels = c("3rd_trimester","2_week","2_months","12_months"))) %>%
   drop_na(Participant_ID, crc_specimen_barcode) %>%  # drop rows with no part_id and barcode. 
-  mutate(aliquot_type_tmp = recode(aliquot_type, 
+  mutate(aliquot_type = recode(aliquot_type_tmp, 
                                  'Plasma' = "plasma",
                                  'Saliva' = "saliva",
                                  'Urine' = "urine",
@@ -176,6 +177,8 @@ ctsi_merged$clinic_visit=as.factor(ctsi_merged$clinic_visit)
                                  'Formula'="formula"))
     
   unique(ctsi_updated$aliquot_type_tmp)  # need to export and check.
+  unique(ctsi_updated$aliquot_type)  # need to export and check.
+  
   
 # **************************************************************************** #
 # ***************          FINAL CHECKS ON DATA
@@ -191,6 +194,6 @@ ctsi_merged$clinic_visit=as.factor(ctsi_merged$clinic_visit)
 # ***************  Export data set
 # **************************************************************************** #
 
-merged.file.name="ctsi_barcodes_updated_V0.csv"
+merged.file.name="ctsi_barcodes_updated_V1.csv"
 merge.file.path=paste0(out.dir,merged.file.name);merge.file.path
 write.csv(ctsi_updated, file=merge.file.path,row.names=FALSE)

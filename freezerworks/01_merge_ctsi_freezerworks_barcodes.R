@@ -33,11 +33,10 @@ library(dplyr)
 
 # Read CTSI Barcodes Data:
 #------------------------
-ctsi.file.name="ctsi_barcodes_updated_V0.csv";ctsi.file.name
+ctsi.file.name="ctsi_barcodes_updated_V1.csv";ctsi.file.name
 ctsi.file.path=paste0(work.dir,"export_ctsi_barcodes\\",ctsi.file.name);ctsi.file.path
 ctsi<- read_csv(ctsi.file.path) %>%
   select(-crc_specimen_number) %>%
-  rename(aliquot_type="specimen_type") %>%
   mutate(crc_specimen_barcode=as.numeric(crc_specimen_barcode)) %>%
   mutate(crc_specimen_barcode=as.character(crc_specimen_barcode))
 
@@ -121,7 +120,7 @@ names(barcodes_merged)
 str(barcodes_merged)
 
 # export data
-merged.file.name="barcodes_merged.csv"
+merged.file.name="barcodes_merged_V1.csv"
 merge.file.path=paste0(out.dir,"followup_freezerworks\\",merged.file.name);merge.file.path
 write.csv(barcodes_merged, file=merge.file.path,row.names=FALSE)
 
