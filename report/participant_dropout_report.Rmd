@@ -44,9 +44,7 @@ desired_fields=c("test_id","redcap_event_name",
                  "beach_drop_reason",
                  "beach_last_visit",
                  "mom2wk_mod",
-                 "mom3t_prepreg_bmi",
-                 "inf2wk_delivery_location",
-                 "mom3t_delivery_location")
+                 "mom3t_prepreg_bmi")
 
 # dropped participants
 dropped.records.v1=c("BLS006A",
@@ -69,6 +67,24 @@ dat<- redcap_read(
   )$data
 
 head(dat)
+
+# reformat data
+#--------------
+# note: you will need to look in redcap data dictionary for values to recode
+dat.f=dat %>%
+  select(-redcap_event_name,-redcap_repeat_instrument,-redcap_repeat_instance) %>%
+  mutate(beach_part_drop_out = recode(beach_part_drop_out, "1"="dropped","2"="not-dropped"),
+         beach_last_visit    = recode(beach_last_visit, "1"="3rd_tri","2"="2wks","3"="2mon","4"="6mon","5"="12mon"),
+         mom3t_delivery_location= recode(mom3t_delivery_location, "1"="UFHealth","2"="North_FL","3"="Birth_Center","4"="Other","5"="IDK")) %>%
+  rename("UFHealth"=inf2wk_delivery_location___1,
+         "North_FL"=inf2wk_delivery_location___2,
+         "Birth_Center"=inf2wk_delivery_location___3,
+         "Other"=inf2wk_delivery_location___4,
+         "IDK"=inf2wk_delivery_location___5) %>%
+  gather(inf2wk_delivery_location, Count, UFHealth:IDK)
+
+
+  
 ```
 
 ##Last visit completed by each participant:
