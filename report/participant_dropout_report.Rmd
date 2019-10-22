@@ -43,6 +43,7 @@ desired_fields=c("test_id","redcap_event_name",
                  "beach_part_drop_out",
                  "beach_drop_reason",
                  "beach_last_visit",
+                 "beachphone_mod",
                  "mom2wk_mod",
                  "mom3t_prepreg_bmi")
 
@@ -75,23 +76,19 @@ dat.f=dat %>%
   select(-redcap_event_name,-redcap_repeat_instrument,-redcap_repeat_instance) %>%
   mutate(beach_part_drop_out = recode(beach_part_drop_out, "1"="dropped","2"="not-dropped"),
          beach_last_visit    = recode(beach_last_visit, "1"="3rd_tri","2"="2wks","3"="2mon","4"="6mon","5"="12mon"),
-         mom3t_delivery_location= recode(mom3t_delivery_location, "1"="UFHealth","2"="North_FL","3"="Birth_Center","4"="Other","5"="IDK")) %>%
-  rename("UFHealth"=inf2wk_delivery_location___1,
-         "North_FL"=inf2wk_delivery_location___2,
-         "Birth_Center"=inf2wk_delivery_location___3,
-         "Other"=inf2wk_delivery_location___4,
-         "IDK"=inf2wk_delivery_location___5) %>%
-  gather(inf2wk_delivery_location, Count, UFHealth:IDK)
-
-
-  
+         beachphone_mod = recode(beachphone_mod, "1"="vaginally","2"="c-section"),
+         mom2wk_mod    = recode(mom2wk_mod, "1"="vaginally","2"="c-section")) %>%
+  group_by(test_id) %>%
+  arrange(mom3t_prepreg_bmi) %>%
+  mutate(prepreg_bmi= dplyr::first(mom3t_prepreg_bmi)) %>%
+  arrange(test_id)
+        
 ```
 
 ##Last visit completed by each participant:
 ```{r echo=FALSE}
-last_visit<-dat%>%
-  select(test_id,beach_part_drop_out,beach_last_visit)%>%
-  filter(beach_part_drop_out==1)
+last_visit<-dat.f%>%
+  group_by(beach_last_visit) %>%
 ```
 
 ##Mode of delivery for participant:
