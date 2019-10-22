@@ -26,6 +26,23 @@ beach_token<-decrypt_dpapi_pw(credential_path)
 # Create connections
 rcon <- redcapConnection(url=uri, token=beach_token)
 
+
+# crc variables
+
+desired_fields_dropped=c("beach_part_drop_out","beach_drop_reason","beach_last_visit","mom2wk_mod","mom3t_prepreg_bmi","inf2wk_delivery_location","mom3t_delivery_location")
+
+# combine desired fields and import test_id and redcap_event_name
+
+desired_fields_all=c(desired_fields_dropped,"test_id","redcap_event_name")
+
+# events to retain
+
+events_to_retain  <- c("third_trimester_arm_1", "two_week_arm_1", "two_month_arm_1","baseline_arm_1")
+
+# consented records
+
+consent.records.v1=c("BLS006A","BLS010A","BLS015A","BLS026A","BLS029A","BLS037A","BLS039A","BLS050A","BLS054A","BLS001A")
+
 # variables
 desired_fields=c("test_id","redcap_event_name",
                  "beach_part_drop_out",
@@ -54,6 +71,7 @@ consent.records.v1=c("BLS006A",
                      "BLS054A",
                      "BLS001A")
 
+
 # pull data
 dat<- redcap_read(
   batch_size=300,
@@ -67,46 +85,43 @@ dat<- redcap_read(
 head(dat)
 ```
 
-##Participants that have dropped:
+## Did Participant drop:
 ```{r echo=FALSE}
-participants_dropped<-dat%>%
-  select(test_id,beach_part_drop_out)%>%
-  filter(beach_part_drop_out==1)%>%
-  distinct(test_id)
 participant_dropped<-participants_dropped%>%
   select(test_id)%>%
-  rename("participants"=test_id)
+  rename("Dropped Particpants"=test_id)
 kable(participant_dropped)
 ```
 
-##Last visit completed by each participant:
+##Last visit completed by participant:
 ```{r echo=FALSE}
 last_visit<-ds_some_rows_v1%>%
-  select(test_id,beach_part_drop_out,beach_last_visit)%>%
-  filter(beach_part_drop_out==1)
-  
+  select(test_id,beach_part_drop_out,beach_last_visit,redcap_event_name)%>%
+  filter(beach_part_drop_out==1,redcap_event_name=="baseline_arm_1")
+
 for(i in 1:nrow(last_visit)){
   cat(last_visit[i,1])
-  if(last_visit[i,2]==1)
+  if(last_visit[i,3]==1)
     cat("\tlast visit : third trimester\n")
-  else if(last_visit[i,2]==2)
+  else if(last_visit[i,3]==2)
     cat("\tlast visit : 2 week\n")
-  else if(last_visit[i,2]==3)
+  else if(last_visit[i,3]==3)
     cat("\tlast visit : 2 month\n")
-  else if(last_visit[i,2]==2)
+  else if(last_visit[i,3]==2)
     cat("\tlast visit : 6 month\n")
-  else if(last_visit[i,2]==2)
+  else if(last_visit[i,3]==2)
     cat("\tlast visit : 12 month\n")
 }
 
 ```
 
 ##Mode of delivery for participant:
+###  (If participant did not reach the 2-week visit they will not display because they did not respond to this question)
 
 ```{r echo=FALSE}
 test<-ds_some_rows_v1%>%
-  select(test_id,beach_part_drop_out)%>%
-  filter(beach_part_drop_out==1)%>%
+  select(test_id,beach_part_drop_out,redcap_event_name)%>%
+  filter(beach_part_drop_out==1,redcap_event_name=="baseline_arm_1")%>%
   distinct(test_id)
 
 apple<-c()
@@ -114,20 +129,20 @@ for(i in 1:nrow(test)){
   apple<-c(apple,test[i,1])
 }
 
-mode_delevery<-ds_some_rows_v1%>%
-  select(test_id,beach_part_drop_out,beach_last_visit, mom2wk_mod)%>%
-  filter(test_id%in%apple)%>%
-  select(test_id,mom2wk_mod)
+mode_delivery<-ds_some_rows_v1%>%
+  select(test_id,beach_part_drop_out,beach_last_visit, mom2wk_mod,redcap_event_name)%>%
+  filter(test_id%in%apple, redcap_event_name=="two_week_arm_1")%>%
+  select(test_id,mom2wk_mod)%>%
+  distinct(test_id,mom2wk_mod)
 
-
-for(i in 1:nrow(mode_delevery)){
-  cat(mode_delevery[i,1])
-  if(is.na(mode_delevery[i,2]))
+for(i in 1:nrow(mode_delivery)){
+  cat(mode_delivery[i,1])
+  if(is.na(mode_delivery[i,2]))
     cat("\tDid not respond as to mode of delivery\n")
-  else if(mode_delevery[i,2]==1)
-    cat("\tlast visit : 2 week\n")
-  else if(mode_delevery[i,2]==2)
-    cat("\tlast visit : 2 month\n")
+  else if(mode_delivery[i,2]==1)
+    cat("\tDelivered : Vaginaly\n")
+  else if(mode_delivery[i,2]==2)
+    cat("\tDelivered : Cesarean\n")
 }
 
 ```
@@ -135,26 +150,47 @@ for(i in 1:nrow(mode_delevery)){
 ##Pre-pregnant BMI of dropped participants:
 ```{r echo=FALSE}
 BMI <- ds_some_rows_v1%>%
+  select(test_id,mom3t_prepreg_bmi,redcap_event_name)%>%
+  filter(test_id%in%apple,redcap_event_name=="third_trimester_arm_1")%>%
   select(test_id,mom3t_prepreg_bmi)%>%
-  filter(test_id%in%apple)%>%
   rename("participant"=test_id,"pre-Pregnant BMI"=mom3t_prepreg_bmi)
 kable(BMI)
 
 ```
 
-##Delivery Location of dropped participants:
-###If empty, then dropped participant didn't provide location
+##Where participant was planning to Deliver during 3rd Trimester:
+
 ```{r echo=FALSE}
 
 #chart of Delivery location question at 3rd trimester   
 DeliveryLocation_tri <-ds_some_rows_v1%>%
   select(test_id,redcap_event_name,mom3t_delivery_location)%>%
   arrange(test_id,redcap_event_name)%>%
-  filter(redcap_event_name == "third_trimester_arm_1")
+  filter(test_id%in%apple,redcap_event_name == "third_trimester_arm_1")%>%
+  select(test_id,mom3t_delivery_location)
 
-
+for(i in 1:nrow(DeliveryLocation_tri)){
+  cat(DeliveryLocation_tri[i,1])
+  if(is.na(DeliveryLocation_tri[i,2]))
+    cat("\tDid not respond\n")
+  else if(DeliveryLocation_tri[i,2]==1)
+    cat("\tPlanning to Delivered in UF/Shands\n")
+  else if(DeliveryLocation_tri[i,2]==2)
+    cat("\tPlanning to Deliver in North Florida Regional\n")
+  else if(DeliveryLocation_tri[i,2]==3)
+    cat("\tPlanning to Deliver in Birth and Wellness Center of Gainesville\n")
+  else if(DeliveryLocation_tri[i,2]==4){
+    cat("\tPlanning to Deliver in North Florida Regional\n")
+}
+  else if(DeliveryLocation_tri[i,2]==5)
+    cat("\tResponded that they don't know where they will Deliver\n")
+}
 #Talbe of participants who responsed to the question
+```
 
+##Where particpant Delivered and responded at 2-week visit:
+###(Only displays participants that completed the 2-week visit)
+```{r echo=FALSE}
 DeliveryLocation_tri_pop<-filter(DeliveryLocation_tri,!is.na(mom3t_delivery_location))
 
 #chart of Delivery location question at 2 week
@@ -169,35 +205,24 @@ DeliveryLocation_wk <-ds_some_rows_v1%>%
          "IDK"=inf2wk_delivery_location___5)%>%
   filter(redcap_event_name == "two_week_arm_1",test_id%in%apple)%>%
   rename(participant=test_id,"visit type"=redcap_event_name)
-kable(DeliveryLocation_wk)
+
 #seperate variables and check for population 
 
-uf<-DeliveryLocation_wk%>%
-  select(participant,UFHealth)%>%
-  filter(UFHealth>0)%>%
-  select(participant)
-
-NF<-DeliveryLocation_wk%>%
-  select(participant,`North Florida Regional`)%>%
-  filter(`North Florida Regional`>0)%>%
-  select(participant)
-
-BWC<-DeliveryLocation_wk%>%
-  select(participant,`Birth & wellness Center of Gainesville`)%>%
-  filter(`Birth & wellness Center of Gainesville`>0)%>%
-  select(participant)
-
-Other<-DeliveryLocation_wk%>%
-  select(participant,`other`)%>%
-  filter(other>0)%>%
-  select(participant)
-
-idk<-DeliveryLocation_wk%>%
-  select(participant,`IDK`)%>%
-  filter(IDK>0)%>%
-  select(participant)
-
-tm1<-dplyr::full_join(uf,NF,BWC,by="participant")
-tm2<-dplyr::full_join(Other, idk,by="participant")
-#kable(distinct(dplyr::full_join(tm1,tm2,by="participant")))
+for(i in 1:nrow(DeliveryLocation_wk)){
+  cat(DeliveryLocation_wk[i,1])
+  if(DeliveryLocation_wk[i,3]>0)
+    cat("\tDelivered in  UF\n")  
+  else if(DeliveryLocation_wk[i,4]>0)
+    cat("\tDelivered in  North Florida\n")  
+  else if(DeliveryLocation_wk[i,5]>0)
+    cat("\tDelivered in Gainesville Birth and Wellness Center\n")  
+  else if(DeliveryLocation_wk[i,6]>0){
+    cat("\t Delivered in other\n")
+  }
+  else if(DeliveryLocation_wk[i,7]>0)
+    cat("\tDoes not know location of delivery\n")  
+  else
+    cat("\tParticipant Didn't respond in questionare\n")    
+    }
 ```
+
