@@ -8,10 +8,6 @@ output:
     theme: spacelab
     toc: yes
     toc_float: yes
-  pdf_document:
-    toc: yes
-  word_document:
-    toc: yes
 ---
 
 ```{r setup, include=FALSE, warning = FALSE}
@@ -91,7 +87,7 @@ dat.f=dat %>%
         
 ```
 
-##Last visit completed by each participant:
+# Study Visit
 ```{r echo=FALSE}
 
 bar_chart=dat.f %>% group_by(beach_last_visit2) %>% tally()
