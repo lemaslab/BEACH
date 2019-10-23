@@ -14,7 +14,7 @@ output:
     toc: yes
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, warning = FALSE}
 
 library(knitr, warn.conflicts = F, quietly = T)
 library(tidyr, warn.conflicts = F, quietly = T)
@@ -33,7 +33,7 @@ beach_token<-decrypt_dpapi_pw(credential_path)
 
 ```
 
-```{r variable selection, include=FALSE}
+```{r variable selection, include=FALSE, warning = FALSE}
 
 # Create connections
 rcon <- redcapConnection(url=uri, token=beach_token)
@@ -81,14 +81,26 @@ dat.f=dat %>%
   group_by(test_id) %>%
   arrange(mom3t_prepreg_bmi) %>%
   mutate(prepreg_bmi= dplyr::first(mom3t_prepreg_bmi)) %>%
-  arrange(test_id)
+  arrange(beach_last_visit) %>%
+  mutate(beach_last_visit2= dplyr::first(beach_last_visit)) %>%
+  arrange(test_id) %>%
+  select(-beach_last_visit, -mom3t_prepreg_bmi) %>%
+  select(test_id, prepreg_bmi, beach_last_visit2) %>%
+  distinct()
+  
         
 ```
 
 ##Last visit completed by each participant:
 ```{r echo=FALSE}
-last_visit<-dat.f%>%
-  group_by(beach_last_visit) %>%
+
+bar_chart=dat.f %>% group_by(beach_last_visit2) %>% tally()
+
+# sort study visits by making variable a factor
+bar_chart$beach_last_visit2 <- factor(bar_chart$beach_last_visit2,levels = c("3rd_tri", "2wks", "2mon"))
+# plot, add counts to figure
+ggplot(data=bar_chart, aes(x=beach_last_visit2, y=n)) + geom_bar(colour="black", stat="identity") + geom_text(aes(label=n), vjust=-0.4) 
+
 ```
 
 ##Mode of delivery for participant:
