@@ -99,16 +99,19 @@ bar_chart=dat.f %>% group_by(beach_last_visit2) %>% tally()
 # sort study visits by making variable a factor
 bar_chart$beach_last_visit2 <- factor(bar_chart$beach_last_visit2,levels = c("3rd_tri", "2wks", "2mon"))
 # plot, add counts to figure
-ggplot(data=bar_chart, aes(x=beach_last_visit2, y=n)) + geom_bar(colour="black", stat="identity") + geom_text(aes(label=n), vjust=-0.4) 
+p=ggplot(data=bar_chart, aes(x=beach_last_visit2, y=n)) + geom_bar(colour="black", stat="identity") + geom_text(aes(label=n), vjust=-0.4) 
+
+p + ggtitle("Dropped participants last study visit") +
+  xlab("study visit") + ylab("counts")
 
 ```
 
 ##Mode of delivery for participant:
-```{r echo=FALSE}
-test<-dat%>%
-  select(test_id,beach_part_drop_out)%>%
-  filter(beach_part_drop_out==1)%>%
-  distinct(test_id)
+# ```{r echo=FALSE}
+# test<-dat%>%
+#   select(test_id,beach_part_drop_out)%>%
+#   filter(beach_part_drop_out==1)%>%
+#   distinct(test_id)
 ```
 
 ##Pre-pregnant BMI of dropped participants:
