@@ -17,6 +17,7 @@ library(keyringr)
 library(redcapAPI)
 library(REDCapR)
 library(dplyr)
+library(lubridate)
 
 # Get Redcap API Token: 
 # Gator Link VPN
@@ -46,7 +47,7 @@ length(unique(data$test_id))
 desired_fields_v1 <- c("test_id", "redcap_event_name", "beach_learn_about_study","beach_encounter_date","beach_study_encounters_complete",
                        "prescreen_date","beach_prescreen_survey_complete",
                        "beachphone_date","beachphone_hear_about_us","beach_phone_screen_complete",
-                       "beach_part_consent")
+                       "beach_part_consent","beach_consent_date1")
 
 recruitment <- redcap_read(redcap_uri=uri, token=beach_token, fields= desired_fields_v1)$data
 
@@ -64,6 +65,9 @@ str(dat)
 dat$prescreen_date=as.Date(dat$prescreen_date, "%Y-%m-%d")
 dat$beach_encounter_date=as.Date(dat$beach_encounter_date, "%Y-%m-%d")
 dat$beachphone_date=as.Date(dat$beachphone_date, "%Y-%m-%d")
+dat$beach_consent_date1=as.Date(dat$beach_consent_date1, "%Y-%m-%d")
+dat$phone_year=year(dat$beachphone_date)
+dat$consent_year=year(dat$beach_consent_date1)
 
 
 # analysis
@@ -72,13 +76,11 @@ names(dat)
 dat$beach_phone_screen_complete
 
 # how did phone screen encounter hear about us? 
+# 1, Flyer | 2, Radio | 3, Social Media | 4, Newspaper | 5, Word-of-mouth | 6, Other
 phone=dat %>%
-  group_by(beachphone_hear_about_us) %>%
+  group_by(beachphone_hear_about_us, phone_year) %>%
   filter(beach_phone_screen_complete==2 & redcap_event_name=="baseline_arm_1") %>%
-  select(test_id, beach_phone_screen_complete, redcap_event_name, beachphone_hear_about_us) %>%
+  select(test_id, beach_phone_screen_complete, redcap_event_name, beachphone_hear_about_us,phone_year) %>%
   tally(beachphone_hear_about_us)
   
-  pull(record_id)
-length(complete) # 40
-
-# need to add year. lubridate. 
+ 
