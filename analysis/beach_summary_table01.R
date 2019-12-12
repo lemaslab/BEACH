@@ -40,7 +40,9 @@ exportRecords(rcon)
 
 # problem record: need to comb through records to identify problems.
 # checked: 1 - 1020
-consent.records.v2=c(1:1020) # problem record 1984- fixed. names dont match. check.
+# problem record 1984- fixed. names dont match. check �
+# problem record 1030- fixed. 
+consent.records.v2=c(1:1500) 
 # pull data
 ds_some_rows_v2 <- redcap_read(
   batch_size=250,
@@ -50,9 +52,9 @@ ds_some_rows_v2 <- redcap_read(
   #fields     = desired_fields_v1
 )$data
 
+ds_all_rows_all_fields <- redcap_read(redcap_uri=uri, token=beach_token)$data
 
-
-data=ds_some_rows_v2
+data=ds_all_rows_all_fields
 length(unique(data$test_id))
 
 desired_records_v1 <- c("BLS001A")
