@@ -38,9 +38,9 @@ exportInstruments(rcon)
 exportEvents(rcon)
 
 # pull data (records and variables)
-ds_all_rows_all_fields <- redcap_read(redcap_uri=uri, token=beach_token)$data
-data=ds_all_rows_all_fields
-length(unique(data$test_id))
+#ds_all_rows_all_fields <- redcap_read(redcap_uri=uri, token=beach_token)$data
+#data=ds_all_rows_all_fields
+#length(unique(data$test_id))
 
 
 # pull subset of variables
@@ -75,12 +75,30 @@ dat$consent_year=year(dat$beach_consent_date1)
 names(dat)
 dat$beach_phone_screen_complete
 
-# how did phone screen encounter hear about us? 
+# how did phone screen encounters hear about us? 
+#----------------------------------------------
 # 1, Flyer | 2, Radio | 3, Social Media | 4, Newspaper | 5, Word-of-mouth | 6, Other
 phone=dat %>%
-  group_by(beachphone_hear_about_us, phone_year) %>%
   filter(beach_phone_screen_complete==2 & redcap_event_name=="baseline_arm_1") %>%
+  mutate(beachphone_hear_about_us = recode(beachphone_hear_about_us, "1"="flier","2"="radio","3"="social_media","4"="newspaper","5"="word-of-mouth","6"="other")) %>%
+  group_by(phone_year, beachphone_hear_about_us) %>%
   select(test_id, beach_phone_screen_complete, redcap_event_name, beachphone_hear_about_us,phone_year) %>%
-  tally(beachphone_hear_about_us)
+  count(beachphone_hear_about_us)
+
+phone.overal=dat %>%
+  filter(beach_phone_screen_complete==2 & redcap_event_name=="baseline_arm_1") %>%
+  mutate(beachphone_hear_about_us = recode(beachphone_hear_about_us, "1"="flier","2"="radio","3"="social_media","4"="newspaper","5"="word-of-mouth","6"="other")) %>%
+  group_by(beachphone_hear_about_us) %>%
+  select(test_id, beach_phone_screen_complete, redcap_event_name, beachphone_hear_about_us,phone_year) %>%
+  count(beachphone_hear_about_us)
   
- 
+
+# how did those participants who consented hear about us? 
+#----------------------------------------------
+# 1, Flyer | 2, Radio | 3, Social Media | 4, Newspaper | 5, Word-of-mouth | 6, Other
+consent=dat %>%
+  filter(beach_part_consent==1 & redcap_event_name=="baseline_arm_1") %>%
+  mutate(beachphone_hear_about_us = recode(beachphone_hear_about_us, "1"="flier","2"="radio","3"="social_media","4"="newspaper","5"="word-of-mouth","6"="other")) %>%
+  group_by(consent_year, beachphone_hear_about_us) %>%
+  select(test_id, beach_phone_screen_complete, redcap_event_name, beachphone_hear_about_us,consent_year) %>%
+  count(beachphone_hear_about_us)
