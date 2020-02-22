@@ -41,10 +41,8 @@ desired_fields=c("test_id","redcap_event_name",
                   "mompa_walk_slow","mompa_walk_quick",
                   "mompa_walk_hills","mompa_jog",
                   "mompa_prenatal_exer","mompa_swim",
-                  "mompa_dance","mompa_other_exer")
-
-,
-                  "physical_activity_questionnaire_v3_022118_complete")
+                  "mompa_dance","mompa_other_exer",
+                 "physical_activity_questionnaire_v3_022118_complete")
 
 
 # dropped participants
