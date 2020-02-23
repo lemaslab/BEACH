@@ -21,7 +21,7 @@ library(redcapAPI, warn.conflicts = F, quietly = T)
 library(REDCapR, warn.conflicts = F, quietly = T)
 library(lubridate, warn.conflicts = F, quietly = T)
 
-#Create path to and api link to RedCaps
+# keyringr: Avoiding plain text passwords
 credential_label <- "beach_api"
 credential_path <- paste(Sys.getenv("USERPROFILE"), '\\DPAPI\\passwords\\', Sys.info()["nodename"], '\\', credential_label, '.txt', sep="")
 uri <- "https://redcap.ctsi.ufl.edu/redcap/api/"
@@ -29,42 +29,61 @@ beach_token<-decrypt_dpapi_pw(credential_path)
 
 ```
 
-```{r variable selection, include=FALSE, warning = FALSE}
+```{r pull data, include=FALSE, warning = FALSE}
 
 # Create connections
 rcon <- redcapConnection(url=uri, token=beach_token)
 
+# events
+events=c("baseline_arm_1","third_trimester_arm_1","two_week_arm_1","two_month_arm_1
+","six_month_arm_1","twelve_month_arm_1")
+
 # variables
-desired_fields=c("test_id","redcap_event_name",
+fields=c("test_id","redcap_event_name",
                  "beach_part_drop_out",
                   "mompa_todays_date","mompa_study_visit",
                   "mompa_walk_slow","mompa_walk_quick",
                   "mompa_walk_hills","mompa_jog",
                   "mompa_prenatal_exer","mompa_swim",
-                  "mompa_dance","mompa_other_exer")
-
-,
+                  "mompa_dance","mompa_other_exer",     
                   "physical_activity_questionnaire_v3_022118_complete")
 
+records=c("BLS001A","BLS002A","BLS003A","BLS007A","BLS008A","BLS011A",
+          "BLS012A","BLS013A","BLS014A","BLS016A","BLS019A","BLS020A",
+          "BLS023A","BLS025A","BLS027A","BLS028A","BLS030A","BLS032A",
+          "BLS033A","BLS034A","BLS035A","BLS036A","BLS038A","BLS040A",
+          "BLS041A","BLS043A","BLS044A","BLS045A","BLS048A","BLS049A",
+          "BLS051A","BLS052A","BLS053A","BLS055A","BLS056A","BLS059A",
+          "BLS063A","BLS064A","BLS065A","BLS068A","BLS073A","BLS078A",
+          "BLS079A","BLS083A")
 
-# dropped participants
- dropped.records.v1=c("BLS006A",
-                      "BLS010A",
-                      "BLS015A",
-                      "BLS026A",
-                      "BLS029A",
-                      "BLS037A",
-                      "BLS039A",
-                      "BLS050A",
-                      "BLS054A")
-
+# Issue with redcap_read(): 
+# Error in inherits(ds, "data.frame") : object 'ds' not found
+#-------------------------
 # pull data
-dat<- redcap_read(
-  batch_size=300,
-  records= dropped.records.v1,
-  redcap_uri = uri, 
-  token      = beach_token, 
-  fields     = desired_fields
-  )$data
+# dat<- redcap_read(
+#   batch_size=300,
+#   records= dropped.records.v1,
+#   redcap_uri = uri, 
+#   token      = beach_token, 
+#   fields     = desired_fields
+#   )$data
+
+dat=redcap_read_oneshot(
+                redcap_uri = uri, 
+                token      = beach_token,
+                fields     = fields,
+                events     = events,
+                records    = records)
+
+active=dat$data 
 
 ```
+
+```{r subset to consented}
+
+act=active%>%
+  
+
+```
+
