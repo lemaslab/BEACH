@@ -45,8 +45,7 @@ fields=c("test_id","redcap_event_name",
                   "mompa_walk_slow","mompa_walk_quick",
                   "mompa_walk_hills","mompa_jog",
                   "mompa_prenatal_exer","mompa_swim",
-                  "mompa_dance","mompa_other_exer",     
-                  "physical_activity_questionnaire_v3_022118_complete")
+                  "mompa_dance","physical_activity_questionnaire_v3_022118_complete")
 
 records=c("BLS001A","BLS002A","BLS003A","BLS007A","BLS008A","BLS011A",
           "BLS012A","BLS013A","BLS014A","BLS016A","BLS019A","BLS020A",
@@ -76,14 +75,45 @@ dat=redcap_read_oneshot(
                 events     = events,
                 records    = records)
 
-active=dat$data 
+active=dat$data
+
+# factors
+active$study_visit=as.factor(active$redcap_event_name)
+
 
 ```
 
 ```{r subset to consented}
 
+# format data
 act=active%>%
-  
+  group_by(test_id)%>%
+  rename(questionnaire_complete = physical_activity_questionnaire_v3_022118_complete)%>%
+  mutate(drop_from_study=if(any(beach_part_drop_out == 0)) 0 else NA)%>%
+  mutate(study_visit = factor(study_visit, levels = 
+                                c("baseline_arm_1",
+                                  "third_trimester_arm_1",
+                                  "two_week_arm_1",
+                                  "two_month_arm_1",
+                                  "six_month_arm_1",
+                                  "twelve_month_arm_1")))%>%
+  select(-c(redcap_repeat_instrument,
+            redcap_event_name,
+            redcap_repeat_instance,
+            beach_part_drop_out,
+            mompa_todays_date)) %>%
+  select(test_id,study_visit, everything())%>%
+  gather(activity, response, mompa_walk_slow:mompa_dance)%>%
+  arrange(test_id, study_visit)
+
+```
+
+```{r third_trimester}
+
+third=act%>%
+  group_by(test_id)%>%
+  filter(study_visit=="third_trimester_arm_1")%>%
+  tally(response)
 
 ```
 
