@@ -112,7 +112,7 @@ act=active%>%
 
 # need to add redcap import headers 
 
-third=act %>%
+third_tri=act %>%
   group_by(test_id) %>%
   filter(study_visit=="third_trimester_arm_1") %>%
   select(test_id,study_visit,activity,response) %>%
@@ -124,7 +124,101 @@ third=act %>%
 
 ```
 
-```{r}
+```{r two_week_arm_1}
+
+# need to add redcap import headers 
+
+two_wks=act %>%
+  group_by(test_id) %>%
+  filter(study_visit=="two_week_arm_1") %>%
+  select(test_id,study_visit,activity,response) %>%
+  drop_na(response) %>%
+  summarize(count=length(response)) %>%
+  mutate(percent=(count/max(count)*100)) %>%
+  mutate(study_visit="two_week_arm_1") %>%
+  select(test_id,study_visit, everything())
+
+```
+
+
+```{r two_month_arm_1}
+
+# need to add redcap import headers 
+
+two_months=act %>%
+  group_by(test_id) %>%
+  filter(study_visit=="two_month_arm_1") %>%
+  select(test_id,study_visit,activity,response) %>%
+  drop_na(response) %>%
+  summarize(count=length(response)) %>%
+  mutate(percent=(count/max(count)*100)) %>%
+  mutate(study_visit="two_month_arm_1") %>%
+  select(test_id,study_visit, everything())
+
+```
+
+
+```{r six_month_arm_1}
+
+# need to add redcap import headers 
+
+six_months=act %>%
+  group_by(test_id) %>%
+  filter(study_visit=="six_month_arm_1") %>%
+  select(test_id,study_visit,activity,response) %>%
+  drop_na(response) %>%
+  summarize(count=length(response)) %>%
+  mutate(percent=(count/max(count)*100)) %>%
+  mutate(study_visit="six_month_arm_1") %>%
+  select(test_id,study_visit, everything())
+
+```
+
+
+```{r twelve_month_arm_1}
+
+# need to add redcap import headers 
+
+twelve_months=act %>%
+  group_by(test_id) %>%
+  filter(study_visit=="twelve_month_arm_1") %>%
+  select(test_id,study_visit,activity,response) %>%
+  drop_na(response) %>%
+  summarize(count=length(response)) %>%
+  mutate(percent=(count/max(count)*100)) %>%
+  mutate(study_visit="twelve_month_arm_1") %>%
+  select(test_id,study_visit, everything())
+
+```
+
+```{r combine data}
+
+active_inventory=rbind(third_tri, two_wks, two_months, six_months, twelve_months)
+
+# format
+acive_redcap_import_ready=active_inventory %>%
+  mutate(percent=round(percent,1))
+
+# checks
+unique(acive_redcap_import_ready$study_visit)
+range(acive_redcap_import_ready$percent)
+table(acive_redcap_import_ready$percent)
+
+```
+
+```{r, explore data inventory}
+
+dat=acive_redcap_import_ready
+
+dat %>%
+  group_by(test_id) %>%
+  summarize(mean=mean(percent))
+
+
+```
+
+
+```{r started function}
 
 mutate_y <- function(df) {
   mutate(df, y = .data$a + .data$x)
