@@ -124,3 +124,27 @@ third=act %>%
 
 ```
 
+```{r}
+
+mutate_y <- function(df) {
+  mutate(df, y = .data$a + .data$x)
+}
+
+data_inventory <-function(df, study_visit_redcap, group_var, question) {
+    group_by(group_var) %>%
+  filter(study_visit==study_visit_redcap) %>%
+  select(group_var,study_visit,question,response) %>%
+  drop_na(response) %>%
+  summarize(count=length(response)) %>%
+  mutate(percent=(count/max(count)*100)) %>%
+  mutate(study_visit=study_visit_redcap) %>%
+  select(group_var,study_visit, everything())
+}
+
+third.check=data_inventory(act, 
+                           "third_trimester_arm_1",
+                           "test_id",
+                           "activity")
+
+```
+
