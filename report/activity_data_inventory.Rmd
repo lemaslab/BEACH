@@ -27,6 +27,9 @@ credential_path <- paste(Sys.getenv("USERPROFILE"), '\\DPAPI\\passwords\\', Sys.
 uri <- "https://redcap.ctsi.ufl.edu/redcap/api/"
 beach_token<-decrypt_dpapi_pw(credential_path)
 
+# source functions
+source('~/BEACH/utils/functions.R', encoding = 'UTF-8')
+
 ```
 
 ```{r pull data, include=FALSE, warning = FALSE}
@@ -104,7 +107,8 @@ act=active%>%
             mompa_todays_date)) %>%
   select(test_id,study_visit, everything())%>%
   gather(activity, response, mompa_walk_slow:mompa_dance)%>%
-  arrange(test_id, study_visit)
+  arrange(test_id, study_visit) %>%
+  select(test_id, study_visit, activity, response)
 
 ```
 
@@ -121,6 +125,10 @@ third_tri=act %>%
   mutate(percent=(count/max(count)*100)) %>%
   mutate(study_visit="third_trimester_arm_1") %>%
   select(test_id,study_visit, everything())
+
+test=data_inventory(act,"test_id","third_trimester_arm_1",activity,response)
+
+group_var,event,question,response
 
 ```
 
