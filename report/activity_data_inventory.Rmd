@@ -126,6 +126,11 @@ third_tri=act %>%
   mutate(study_visit="third_trimester_arm_1") %>%
   select(test_id,study_visit, everything())
 
+library(lazyeval)
+https://github.com/r-lib/rlang/issues/116
+test=data_inventory(act,"test_id","third_trimester_arm_1") ,activity,response)
+
+
 test=data_inventory(act,"test_id","third_trimester_arm_1",activity,response)
 
 group_var,event,question,response
