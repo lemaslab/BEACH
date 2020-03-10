@@ -1,0 +1,244 @@
+---
+title: "Data Inventory: Physical Activity"
+author: "Dominick Lemas"
+date: "February 22, 2020"
+output:
+  html_document:
+    highlight: tango
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+---
+
+```{r setup, include=FALSE, warning = FALSE}
+
+library(knitr, warn.conflicts = F, quietly = T)
+library(tidyr, warn.conflicts = F, quietly = T)
+library(dplyr, warn.conflicts = F, quietly = T)
+library(ggplot2, warn.conflicts = F, quietly = T)
+library(keyringr, warn.conflicts = F, quietly = T)
+library(redcapAPI, warn.conflicts = F, quietly = T)
+library(REDCapR, warn.conflicts = F, quietly = T)
+library(lubridate, warn.conflicts = F, quietly = T)
+
+# keyringr: Avoiding plain text passwords
+credential_label <- "beach_api"
+credential_path <- paste(Sys.getenv("USERPROFILE"), '\\DPAPI\\passwords\\', Sys.info()["nodename"], '\\', credential_label, '.txt', sep="")
+uri <- "https://redcap.ctsi.ufl.edu/redcap/api/"
+beach_token<-decrypt_dpapi_pw(credential_path)
+
+```
+
+```{r pull data, include=FALSE, warning = FALSE}
+
+# Create connections
+rcon <- redcapConnection(url=uri, token=beach_token)
+
+# events
+events=c("baseline_arm_1","third_trimester_arm_1","two_week_arm_1","two_month_arm_1
+","six_month_arm_1","twelve_month_arm_1")
+
+# variables
+fields=c("test_id","redcap_event_name",
+                 "beach_part_drop_out",
+                  "mompa_todays_date","mompa_study_visit",
+                  "mompa_walk_slow","mompa_walk_quick",
+                  "mompa_walk_hills","mompa_jog",
+                  "mompa_prenatal_exer","mompa_swim",
+                  "mompa_dance","physical_activity_questionnaire_v3_022118_complete")
+
+records=c("BLS001A","BLS002A","BLS003A","BLS007A","BLS008A","BLS011A",
+          "BLS012A","BLS013A","BLS014A","BLS016A","BLS019A","BLS020A",
+          "BLS023A","BLS025A","BLS027A","BLS028A","BLS030A","BLS032A",
+          "BLS033A","BLS034A","BLS035A","BLS036A","BLS038A","BLS040A",
+          "BLS041A","BLS043A","BLS044A","BLS045A","BLS048A","BLS049A",
+          "BLS051A","BLS052A","BLS053A","BLS055A","BLS056A","BLS059A",
+          "BLS063A","BLS064A","BLS065A","BLS068A","BLS073A","BLS078A",
+          "BLS079A","BLS083A")
+
+# Issue with redcap_read(): 
+# Error in inherits(ds, "data.frame") : object 'ds' not found
+#-------------------------
+# pull data
+# dat<- redcap_read(
+#   batch_size=300,
+#   records= dropped.records.v1,
+#   redcap_uri = uri, 
+#   token      = beach_token, 
+#   fields     = desired_fields
+#   )$data
+
+dat=redcap_read_oneshot(
+                redcap_uri = uri, 
+                token      = beach_token,
+                fields     = fields,
+                events     = events,
+                records    = records)
+
+active=dat$data
+
+# factors
+active$study_visit=as.factor(active$redcap_event_name)
+
+
+```
+
+```{r subset to consented}
+
+# format data
+act=active%>%
+  group_by(test_id)%>%
+  rename(questionnaire_complete = physical_activity_questionnaire_v3_022118_complete)%>%
+  mutate(drop_from_study=if(any(beach_part_drop_out == 0)) 0 else NA)%>%
+  mutate(study_visit = factor(study_visit, levels = 
+                                c("baseline_arm_1",
+                                  "third_trimester_arm_1",
+                                  "two_week_arm_1",
+                                  "two_month_arm_1",
+                                  "six_month_arm_1",
+                                  "twelve_month_arm_1")))%>%
+  select(-c(redcap_repeat_instrument,
+            redcap_event_name,
+            redcap_repeat_instance,
+            beach_part_drop_out,
+            mompa_todays_date)) %>%
+  select(test_id,study_visit, everything())%>%
+  gather(activity, response, mompa_walk_slow:mompa_dance)%>%
+  arrange(test_id, study_visit)
+
+```
+
+```{r third_trimester}
+
+# need to add redcap import headers 
+
+third_tri=act %>%
+  group_by(test_id) %>%
+  filter(study_visit=="third_trimester_arm_1") %>%
+  select(test_id,study_visit,activity,response) %>%
+  drop_na(response) %>%
+  summarize(count=length(response)) %>%
+  mutate(percent=(count/max(count)*100)) %>%
+  mutate(study_visit="third_trimester_arm_1") %>%
+  select(test_id,study_visit, everything())
+
+```
+
+```{r two_week_arm_1}
+
+# need to add redcap import headers 
+
+two_wks=act %>%
+  group_by(test_id) %>%
+  filter(study_visit=="two_week_arm_1") %>%
+  select(test_id,study_visit,activity,response) %>%
+  drop_na(response) %>%
+  summarize(count=length(response)) %>%
+  mutate(percent=(count/max(count)*100)) %>%
+  mutate(study_visit="two_week_arm_1") %>%
+  select(test_id,study_visit, everything())
+
+```
+
+
+```{r two_month_arm_1}
+
+# need to add redcap import headers 
+
+two_months=act %>%
+  group_by(test_id) %>%
+  filter(study_visit=="two_month_arm_1") %>%
+  select(test_id,study_visit,activity,response) %>%
+  drop_na(response) %>%
+  summarize(count=length(response)) %>%
+  mutate(percent=(count/max(count)*100)) %>%
+  mutate(study_visit="two_month_arm_1") %>%
+  select(test_id,study_visit, everything())
+
+```
+
+
+```{r six_month_arm_1}
+
+# need to add redcap import headers 
+
+six_months=act %>%
+  group_by(test_id) %>%
+  filter(study_visit=="six_month_arm_1") %>%
+  select(test_id,study_visit,activity,response) %>%
+  drop_na(response) %>%
+  summarize(count=length(response)) %>%
+  mutate(percent=(count/max(count)*100)) %>%
+  mutate(study_visit="six_month_arm_1") %>%
+  select(test_id,study_visit, everything())
+
+```
+
+
+```{r twelve_month_arm_1}
+
+# need to add redcap import headers 
+
+twelve_months=act %>%
+  group_by(test_id) %>%
+  filter(study_visit=="twelve_month_arm_1") %>%
+  select(test_id,study_visit,activity,response) %>%
+  drop_na(response) %>%
+  summarize(count=length(response)) %>%
+  mutate(percent=(count/max(count)*100)) %>%
+  mutate(study_visit="twelve_month_arm_1") %>%
+  select(test_id,study_visit, everything())
+
+```
+
+```{r combine data}
+
+active_inventory=rbind(third_tri, two_wks, two_months, six_months, twelve_months)
+
+# format
+acive_redcap_import_ready=active_inventory %>%
+  mutate(percent=round(percent,1))
+
+# checks
+unique(acive_redcap_import_ready$study_visit)
+range(acive_redcap_import_ready$percent)
+table(acive_redcap_import_ready$percent)
+
+```
+
+```{r, explore data inventory}
+
+dat=acive_redcap_import_ready
+
+dat %>%
+  group_by(test_id) %>%
+  summarize(mean=mean(percent))
+
+
+```
+
+
+```{r started function}
+
+mutate_y <- function(df) {
+  mutate(df, y = .data$a + .data$x)
+}
+
+data_inventory <-function(df, study_visit_redcap, group_var, question) {
+    group_by(group_var) %>%
+  filter(study_visit==study_visit_redcap) %>%
+  select(group_var,study_visit,question,response) %>%
+  drop_na(response) %>%
+  summarize(count=length(response)) %>%
+  mutate(percent=(count/max(count)*100)) %>%
+  mutate(study_visit=study_visit_redcap) %>%
+  select(group_var,study_visit, everything())
+}
+
+third.check=data_inventory(act, 
+                           "third_trimester_arm_1",
+                           "test_id",
+                           "activity")
+
+```
+

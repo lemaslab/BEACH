@@ -1,0 +1,117 @@
+---
+title: "Participant Dropout Report"
+author: "Luran M."
+date: "July 10, 2019"
+output:
+  html_document:
+    highlight: tango
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+---
+
+```{r setup, include=FALSE, warning = FALSE}
+
+library(knitr, warn.conflicts = F, quietly = T)
+library(tidyr, warn.conflicts = F, quietly = T)
+library(dplyr, warn.conflicts = F, quietly = T)
+library(ggplot2, warn.conflicts = F, quietly = T)
+library(keyringr, warn.conflicts = F, quietly = T)
+library(redcapAPI, warn.conflicts = F, quietly = T)
+library(REDCapR, warn.conflicts = F, quietly = T)
+library(lubridate, warn.conflicts = F, quietly = T)
+
+#Create path to and api link to RedCaps
+credential_label <- "beach_api"
+credential_path <- paste(Sys.getenv("USERPROFILE"), '\\DPAPI\\passwords\\', Sys.info()["nodename"], '\\', credential_label, '.txt', sep="")
+uri <- "https://redcap.ctsi.ufl.edu/redcap/api/"
+beach_token<-decrypt_dpapi_pw(credential_path)
+
+```
+
+```{r variable selection, include=FALSE, warning = FALSE}
+
+# Create connections
+rcon <- redcapConnection(url=uri, token=beach_token)
+
+# variables
+desired_fields=c("test_id","redcap_event_name",
+                 "beach_part_drop_out",
+                 "beach_drop_reason",
+                 "beach_last_visit",
+                 "beachphone_mod",
+                 "mom2wk_mod",
+                 "mom3t_prepreg_bmi")
+
+# dropped participants
+dropped.records.v1=c("BLS006A",
+                     "BLS010A",
+                     "BLS015A",
+                     "BLS026A",
+                     "BLS029A",
+                     "BLS037A",
+                     "BLS039A",
+                     "BLS050A",
+                     "BLS054A")
+
+# pull data
+dat<- redcap_read(
+  batch_size=300,
+  records= dropped.records.v1,
+  redcap_uri = uri, 
+  token      = beach_token, 
+  fields     = desired_fields
+  )$data
+
+head(dat)
+
+# reformat data
+#--------------
+# note: you will need to look in redcap data dictionary for values to recode
+dat.f=dat %>%
+  select(-redcap_event_name,-redcap_repeat_instrument,-redcap_repeat_instance) %>%
+  mutate(beach_part_drop_out = recode(beach_part_drop_out, "1"="dropped","2"="not-dropped"),
+         beach_last_visit    = recode(beach_last_visit, "1"="3rd_tri","2"="2wks","3"="2mon","4"="6mon","5"="12mon"),
+         beachphone_mod = recode(beachphone_mod, "1"="vaginally","2"="c-section"),
+         mom2wk_mod    = recode(mom2wk_mod, "1"="vaginally","2"="c-section")) %>%
+  group_by(test_id) %>%
+  arrange(mom3t_prepreg_bmi) %>%
+  mutate(prepreg_bmi= dplyr::first(mom3t_prepreg_bmi)) %>%
+  arrange(beach_last_visit) %>%
+  mutate(beach_last_visit2= dplyr::first(beach_last_visit)) %>%
+  arrange(test_id) %>%
+  select(-beach_last_visit, -mom3t_prepreg_bmi) %>%
+  select(test_id, prepreg_bmi, beach_last_visit2) %>%
+  distinct()
+  
+        
+```
+
+# Study Visit
+```{r echo=FALSE}
+
+bar_chart=dat.f %>% group_by(beach_last_visit2) %>% tally()
+
+# sort study visits by making variable a factor
+bar_chart$beach_last_visit2 <- factor(bar_chart$beach_last_visit2,levels = c("3rd_tri", "2wks", "2mon"))
+# plot, add counts to figure
+p=ggplot(data=bar_chart, aes(x=beach_last_visit2, y=n)) + geom_bar(colour="black", stat="identity") + geom_text(aes(label=n), vjust=-0.4) 
+
+p + ggtitle("Dropped participants last study visit") +
+  xlab("study visit") + ylab("counts")
+
+```
+
+##Mode of delivery for participant:
+# ```{r echo=FALSE}
+# test<-dat%>%
+#   select(test_id,beach_part_drop_out)%>%
+#   filter(beach_part_drop_out==1)%>%
+#   distinct(test_id)
+```
+
+##Pre-pregnant BMI of dropped participants:
+
+
+##Delivery Location of dropped participants:
+###If empty, then dropped participant didn't provide location
