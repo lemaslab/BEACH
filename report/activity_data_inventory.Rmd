@@ -20,6 +20,8 @@ library(keyringr, warn.conflicts = F, quietly = T)
 library(redcapAPI, warn.conflicts = F, quietly = T)
 library(REDCapR, warn.conflicts = F, quietly = T)
 library(lubridate, warn.conflicts = F, quietly = T)
+library(tidyverse, warn.conflicts = F, quietly = T)
+
 
 # keyringr: Avoiding plain text passwords
 credential_label <- "beach_api"
@@ -115,125 +117,86 @@ act=active%>%
 
 ```{r third_trimester}
 
-# need to add redcap import headers 
+# need to check this output against function before deleting.  
 # hard code
-third_tri=act %>%
+third_tri = act %>%
   group_by(test_id) %>%
-  filter(study_visit=="third_trimester_arm_1") %>%
-  select(test_id,study_visit,activity,response) %>%
+  filter(study_visit == "third_trimester_arm_1") %>%
+  select(test_id, study_visit, activity, response) %>%
   drop_na(response) %>%
-  summarize(count=length(response)) %>%
-  mutate(percent=(count/max(count)*100)) %>%
-  mutate(study_visit="third_trimester_arm_1") %>%
-  select(test_id,study_visit, everything())
+  summarize(count = length(response)) %>%
+  mutate(percent = (count / max(count) * 100)) %>%
+  mutate(study_visit = "third_trimester_arm_1") %>%
+  select(test_id, study_visit, everything())
 dim(third_tri)
 
 # data_inventory()
-
-test=data_inventory(act, group_var="test_id",
+third_tri.f=data_inventory(act, group_var="test_id",
                          row_match="third_trimester_arm_1", 
                          col_match="study_visit",
                          question="activity",
                          response="response")
-dim(test)
+dim(third_tri.f)
 
 
-```
-
-```{r test dplyr filter function}
-library(tidyverse)
-var1 <- c('yes', NA, NA, 'yes', 
-          'yes', NA, NA, NA, 'yes', NA, 'no', 
-          'no', 'no', 'maybe', NA, 'maybe', 
-          'maybe', 'maybe')
-var2 <- c(1:18)
-
-df <- data_frame(var1, var2)
-
-your_function <- function(df, filter) {
-      # Make filter a quosure
-      filter = enquo(filter)
-
-      df %>% 
-        filter(!is.na(!!filter)) -> new_df
-
-      return(new_df)
-}
-new_df <- your_function(df = df, filter = var1)
 ```
 
 
 
 ```{r two_week_arm_1}
 
-# need to add redcap import headers 
+# two_week_arm_1
 
-two_wks=act %>%
-  group_by(test_id) %>%
-  filter(study_visit=="two_week_arm_1") %>%
-  select(test_id,study_visit,activity,response) %>%
-  drop_na(response) %>%
-  summarize(count=length(response)) %>%
-  mutate(percent=(count/max(count)*100)) %>%
-  mutate(study_visit="two_week_arm_1") %>%
-  select(test_id,study_visit, everything())
+two_wks.f=data_inventory(act, group_var="test_id",
+                         row_match="two_week_arm_1", 
+                         col_match="study_visit",
+                         question="activity",
+                         response="response")
 
 ```
 
 
 ```{r two_month_arm_1}
 
-# need to add redcap import headers 
+# two_month_arm_1 
 
-two_months=act %>%
-  group_by(test_id) %>%
-  filter(study_visit=="two_month_arm_1") %>%
-  select(test_id,study_visit,activity,response) %>%
-  drop_na(response) %>%
-  summarize(count=length(response)) %>%
-  mutate(percent=(count/max(count)*100)) %>%
-  mutate(study_visit="two_month_arm_1") %>%
-  select(test_id,study_visit, everything())
+two_months.f=data_inventory(act, group_var="test_id",
+                         row_match="two_month_arm_1", 
+                         col_match="study_visit",
+                         question="activity",
+                         response="response")
 
 ```
 
 
 ```{r six_month_arm_1}
 
-# need to add redcap import headers 
+# six_month_arm_1 
 
-six_months=act %>%
-  group_by(test_id) %>%
-  filter(study_visit=="six_month_arm_1") %>%
-  select(test_id,study_visit,activity,response) %>%
-  drop_na(response) %>%
-  summarize(count=length(response)) %>%
-  mutate(percent=(count/max(count)*100)) %>%
-  mutate(study_visit="six_month_arm_1") %>%
-  select(test_id,study_visit, everything())
+six_months.f=data_inventory(act, group_var="test_id",
+                         row_match="six_month_arm_1", 
+                         col_match="study_visit",
+                         question="activity",
+                         response="response")
 
 ```
 
 
 ```{r twelve_month_arm_1}
 
-# need to add redcap import headers 
+# twelve_month_arm_1
 
-twelve_months=act %>%
-  group_by(test_id) %>%
-  filter(study_visit=="twelve_month_arm_1") %>%
-  select(test_id,study_visit,activity,response) %>%
-  drop_na(response) %>%
-  summarize(count=length(response)) %>%
-  mutate(percent=(count/max(count)*100)) %>%
-  mutate(study_visit="twelve_month_arm_1") %>%
-  select(test_id,study_visit, everything())
+twelve_months.f=data_inventory(act, group_var="test_id",
+                         row_match="twelve_month_arm_1", 
+                         col_match="study_visit",
+                         question="activity",
+                         response="response")
 
 ```
 
 ```{r combine data}
 
-active_inventory=rbind(third_tri, two_wks, two_months, six_months, twelve_months)
+active_inventory=rbind(third_tri.f, two_wks.f, two_months.f, six_months.f, twelve_months.f)
 
 # format
 acive_redcap_import_ready=active_inventory %>%
@@ -254,31 +217,6 @@ dat %>%
   group_by(test_id) %>%
   summarize(mean=mean(percent))
 
-
-```
-
-
-```{r started function}
-
-mutate_y <- function(df) {
-  mutate(df, y = .data$a + .data$x)
-}
-
-data_inventory <-function(df, study_visit_redcap, group_var, question) {
-    group_by(group_var) %>%
-  filter(study_visit==study_visit_redcap) %>%
-  select(group_var,study_visit,question,response) %>%
-  drop_na(response) %>%
-  summarize(count=length(response)) %>%
-  mutate(percent=(count/max(count)*100)) %>%
-  mutate(study_visit=study_visit_redcap) %>%
-  select(group_var,study_visit, everything())
-}
-
-third.check=data_inventory(act, 
-                           "third_trimester_arm_1",
-                           "test_id",
-                           "activity")
 
 ```
 
