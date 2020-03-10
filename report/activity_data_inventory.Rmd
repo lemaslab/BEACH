@@ -28,7 +28,7 @@ uri <- "https://redcap.ctsi.ufl.edu/redcap/api/"
 beach_token<-decrypt_dpapi_pw(credential_path)
 
 # source functions
-# source('~/BEACH/utils/functions.R', encoding = 'UTF-8')
+source('~/BEACH/utils/functions.R', encoding = 'UTF-8')
 
 ```
 
@@ -128,29 +128,7 @@ third_tri=act %>%
   select(test_id,study_visit, everything())
 dim(third_tri)
 
-# define function
-data_inventory <- function(data = NULL, group_var, row_match, col_match, question,response){
-    if(!missing(data)) {
-
-                #Variable create
-                col <- sym(col_match)
-                row <- row_match
-                group <-sym(group_var)
-                
-                # function 
-                matching <- data %>%
-                  filter(!!col == row) %>%
-                  select(test_id,study_visit,question,response) %>%
-                  drop_na(!! response) %>%
-                  group_by(!! group) %>%
-                  summarize(count=length(response)) %>%
-                  mutate(percent=(count/max(count)*100)) %>%
-                  mutate(study_visit=row) %>%
-                  select(test_id,study_visit, everything())
-       } else {
-        message("You must specify data frame!")
-    }
-} # END FUNCTION
+# data_inventory()
 
 test=data_inventory(act, group_var="test_id",
                          row_match="third_trimester_arm_1", 
