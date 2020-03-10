@@ -127,28 +127,34 @@ third_tri=act %>%
   select(test_id,study_visit, everything())
 
 # define function
-data_inventory <- function(data = NULL, row_matching, col_matching){
+data_inventory <- function(data = NULL, group_var, row_match, col_match, question,response){
     if(!missing(data)) {
 
                 #Variable create
-                col <- sym(col_matching)
-                row <- row_matching
+                col <- sym(col_match)
+                row <- row_match
+                group <-sym(group_var)
+                
+                # function 
                 matching <- data %>%
-                  as.data.frame() %>%
-                  filter(!!col == row) 
+                  filter(!!col == row) %>%
+                  select(test_id,study_visit,question,response) %>%
+                  drop_na(!! response) %>%
+                  group_by(!! group) %>%
+                  summarize(count=length(response)) %>%
+                  mutate(percent=(count/max(count)*100)) %>%
+                  mutate(study_visit=row) %>%
+                  select(test_id,study_visit, everything())
        } else {
         message("You must specify data frame!")
     }
-}
+} # END FUNCTION
 
-test=data_inventory(act, row_matching="third_trimester_arm_1", col_matching="study_visit");test
-
-
-
-
-
-
-
+test=data_inventory(act, group_var="test_id",
+                         row_match="third_trimester_arm_1", 
+                         col_match="study_visit",
+                         question="activity",
+                         response="response")
 
 ```
 
