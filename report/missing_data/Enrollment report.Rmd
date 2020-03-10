@@ -24,7 +24,7 @@ rcon <- redcapConnection(url=uri, token=beach_token)
 # crc variables
 #fields <- exportFieldNames(rcon)
 #crc variables for 3rd trimester visit
-desired_fields_enroll=c("mom2wk_mod","mom3t_prepreg_bmi","inf2wk_delivery_location","mom3t_delivery_location","beach_consent_date1")
+desired_fields_enroll=c("mom2wk_mod","mom3t_prepreg_bmi","inf2wk_delivery_location","mom3t_delivery_location","beach_consent_date1","mom3t_todays_date")
 # combine desired fields and import test_id and redcap_event_name
 desired_fields_all=c(desired_fields_enroll,"test_id","redcap_event_name")
 # events to retain
@@ -59,7 +59,7 @@ head(ds_some_rows_v1)
 ##Mode of delivery for participant:
 
 ```{r echo=FALSE}
-mode_delevery<-ds_some_rows_v1%>%
+mode_delivery<-ds_some_rows_v1%>%
   select(test_id, mom2wk_mod,redcap_event_name)%>%
   filter(redcap_event_name=="two_week_arm_1")%>%
   rename("participant"=test_id,"Mode of Delivery"=mom2wk_mod)%>%
@@ -79,9 +79,10 @@ for(i in 1:nrow(mode_delivery)){
 ##Pre-pregnant BMI of participant:
 ```{r echo=FALSE}
 BMI <- ds_some_rows_v1%>%
-  select(test_id,mom3t_prepreg_bmi)%>%
-  filter(test_id%in%apple)%>%
-  rename("participant"=test_id,"pre-Pregnant BMI"=mom3t_prepreg_bmi)
+  select(test_id,mom3t_prepreg_bmi,redcap_event_name)%>%
+  filter(redcap_event_name=="third_trimester_arm_1")%>%
+  rename("participant"=test_id,"pre-Pregnant BMI"=mom3t_prepreg_bmi)%>%
+  select(participant,"pre-Pregnant BMI")
 kable(BMI)
 ```
 
