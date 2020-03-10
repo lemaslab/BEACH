@@ -126,34 +126,29 @@ third_tri=act %>%
   mutate(study_visit="third_trimester_arm_1") %>%
   select(test_id,study_visit, everything())
 
+# define function
+data_inventory <- function(data = NULL, row_matching, col_matching){
+    if(!missing(data)) {
 
-
-library(tidyverse)
-var1 <- c('yes', NA, NA, 'yes', 
-          'yes', NA, NA, NA, 'yes', NA, 'no', 
-          'no', 'no', 'maybe', NA, 'maybe', 
-          'maybe', 'maybe')
-var2 <- c(1:18)
-
-df <- data_frame(var1, var2)
-
-your_function <- function(df, filter) {
-      # Make filter a quosure
-      filter = enquo(filter)
-
-      df %>% 
-        filter(!is.na(!!filter)) -> new_df
-
-      return(new_df)
+                #Variable create
+                col <- sym(col_matching)
+                row <- row_matching
+                matching <- data %>%
+                  as.data.frame() %>%
+                  filter(!!col == row) 
+       } else {
+        message("You must specify data frame!")
+    }
 }
-new_df <- your_function(df = df, filter = var1)
+
+test=data_inventory(act, row_matching="third_trimester_arm_1", col_matching="study_visit");test
 
 
 
 
-test=data_inventory(act,"test_id","third_trimester_arm_1",activity,response)
 
-group_var,event,question,response
+
+
 
 ```
 
