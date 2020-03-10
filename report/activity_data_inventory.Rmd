@@ -28,7 +28,7 @@ uri <- "https://redcap.ctsi.ufl.edu/redcap/api/"
 beach_token<-decrypt_dpapi_pw(credential_path)
 
 # source functions
-source('~/BEACH/utils/functions.R', encoding = 'UTF-8')
+# source('~/BEACH/utils/functions.R', encoding = 'UTF-8')
 
 ```
 
@@ -126,9 +126,29 @@ third_tri=act %>%
   mutate(study_visit="third_trimester_arm_1") %>%
   select(test_id,study_visit, everything())
 
-library(lazyeval)
-https://github.com/r-lib/rlang/issues/116
-test=data_inventory(act,"test_id","third_trimester_arm_1") ,activity,response)
+
+
+library(tidyverse)
+var1 <- c('yes', NA, NA, 'yes', 
+          'yes', NA, NA, NA, 'yes', NA, 'no', 
+          'no', 'no', 'maybe', NA, 'maybe', 
+          'maybe', 'maybe')
+var2 <- c(1:18)
+
+df <- data_frame(var1, var2)
+
+your_function <- function(df, filter) {
+      # Make filter a quosure
+      filter = enquo(filter)
+
+      df %>% 
+        filter(!is.na(!!filter)) -> new_df
+
+      return(new_df)
+}
+new_df <- your_function(df = df, filter = var1)
+
+
 
 
 test=data_inventory(act,"test_id","third_trimester_arm_1",activity,response)
@@ -136,6 +156,30 @@ test=data_inventory(act,"test_id","third_trimester_arm_1",activity,response)
 group_var,event,question,response
 
 ```
+
+```{r test dplyr filter function}
+library(tidyverse)
+var1 <- c('yes', NA, NA, 'yes', 
+          'yes', NA, NA, NA, 'yes', NA, 'no', 
+          'no', 'no', 'maybe', NA, 'maybe', 
+          'maybe', 'maybe')
+var2 <- c(1:18)
+
+df <- data_frame(var1, var2)
+
+your_function <- function(df, filter) {
+      # Make filter a quosure
+      filter = enquo(filter)
+
+      df %>% 
+        filter(!is.na(!!filter)) -> new_df
+
+      return(new_df)
+}
+new_df <- your_function(df = df, filter = var1)
+```
+
+
 
 ```{r two_week_arm_1}
 
