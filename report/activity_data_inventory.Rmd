@@ -89,7 +89,6 @@ active$study_visit=as.factor(active$redcap_event_name)
 ```
 
 
-```{r subset to consented}
 
 # format data
 act=active%>%
