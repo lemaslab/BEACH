@@ -24,12 +24,19 @@ library(tidyverse, warn.conflicts = F, quietly = T)
 
 
 # keyringr: Avoiding plain text passwords
+uri <- "https://redcap.ctsi.ufl.edu/redcap/api/"
+# load token for Windows user:
 credential_label <- "beach_api"
 credential_path <- paste(Sys.getenv("USERPROFILE"), '\\DPAPI\\passwords\\', Sys.info()["nodename"], '\\', credential_label, '.txt', sep="")
-uri <- "https://redcap.ctsi.ufl.edu/redcap/api/"
 beach_token<-decrypt_dpapi_pw(credential_path)
 
+# load token for Mac user
+credential_label <- "REDCap_BEACH_Study"
+beach_token<-decrypt_kc_pw(credential_label)
+
+getwd()
 # source functions
+## Replace "~" with the location of this project repository on your own computer (e.g., on Xinsong's computer, the location is "/Users/xinsongdu/mnt/projects").
 source('~/BEACH/utils/functions.R', encoding = 'UTF-8')
 
 ```
@@ -46,7 +53,7 @@ events=c("baseline_arm_1","third_trimester_arm_1","two_week_arm_1","two_month_ar
 # variables
 fields=c("test_id","redcap_event_name",
                  "beach_part_drop_out",
-                  "mompa_todays_date","mompa_study_visit",
+                  "mompa_study_visit",
                   "mompa_walk_slow","mompa_walk_quick",
                   "mompa_walk_hills","mompa_jog",
                   "mompa_prenatal_exer","mompa_swim",
@@ -89,7 +96,7 @@ active$study_visit=as.factor(active$redcap_event_name)
 ```
 
 
-
+```{r format data, include=FALSE, warning = FALSE}
 # format data
 act=active%>%
   group_by(test_id)%>%
@@ -105,8 +112,7 @@ act=active%>%
   select(-c(redcap_repeat_instrument,
             redcap_event_name,
             redcap_repeat_instance,
-            beach_part_drop_out,
-            mompa_todays_date)) %>%
+            beach_part_drop_out)) %>%
   select(test_id,study_visit, everything())%>%
   gather(activity, response, mompa_walk_slow:mompa_dance)%>%
   arrange(test_id, study_visit) %>%
