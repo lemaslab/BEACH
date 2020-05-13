@@ -4,4 +4,4 @@
 * [BEACH-database](https://github.com/lemaslab/BEACH-database)
 * [BEACH-reports](https://github.com/lemaslab/BEACH-reports)
 * [BEACH-analysis]
-* [BEACH-facebook]
+* [BEACH-facebook](https://github.com/lemaslab/BEACH-facebook)
