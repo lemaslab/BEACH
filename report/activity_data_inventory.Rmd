@@ -1,0 +1,227 @@
+---
+title: "Data Inventory: Physical Activity"
+author: "Dominick Lemas"
+date: "February 22, 2020"
+output:
+  html_document:
+    highlight: tango
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+---
+
+```{r setup, include=FALSE, warning = FALSE}
+
+library(knitr, warn.conflicts = F, quietly = T)
+library(tidyr, warn.conflicts = F, quietly = T)
+library(dplyr, warn.conflicts = F, quietly = T)
+library(ggplot2, warn.conflicts = F, quietly = T)
+library(keyringr, warn.conflicts = F, quietly = T)
+library(redcapAPI, warn.conflicts = F, quietly = T)
+library(REDCapR, warn.conflicts = F, quietly = T)
+library(lubridate, warn.conflicts = F, quietly = T)
+library(tidyverse, warn.conflicts = F, quietly = T)
+
+
+# keyringr: Avoiding plain text passwords
+uri <- "https://redcap.ctsi.ufl.edu/redcap/api/"
+# load token for Windows user:
+credential_label <- "beach_api"
+credential_path <- paste(Sys.getenv("USERPROFILE"), '\\DPAPI\\passwords\\', Sys.info()["nodename"], '\\', credential_label, '.txt', sep="")
+beach_token<-decrypt_dpapi_pw(credential_path)
+
+# load token for Mac user
+credential_label <- "REDCap_BEACH_Study"
+beach_token<-decrypt_kc_pw(credential_label)
+
+getwd()
+# source functions
+## Replace "~" with the location of this project repository on your own computer (e.g., on Xinsong's computer, the location is "/Users/xinsongdu/mnt/projects").
+source('~/BEACH/utils/functions.R', encoding = 'UTF-8')
+
+```
+
+```{r pull data, include=FALSE, warning = FALSE}
+
+# Create connections
+rcon <- redcapConnection(url=uri, token=beach_token)
+
+# events
+events=c("baseline_arm_1","third_trimester_arm_1","two_week_arm_1","two_month_arm_1
+","six_month_arm_1","twelve_month_arm_1")
+
+# variables
+fields=c("test_id","redcap_event_name",
+                 "beach_part_drop_out",
+                  "mompa_study_visit",
+                  "mompa_walk_slow","mompa_walk_quick",
+                  "mompa_walk_hills","mompa_jog",
+                  "mompa_prenatal_exer","mompa_swim",
+                  "mompa_dance","physical_activity_questionnaire_v3_022118_complete")
+
+records=c("BLS001A","BLS002A","BLS003A","BLS007A","BLS008A","BLS011A",
+          "BLS012A","BLS013A","BLS014A","BLS016A","BLS019A","BLS020A",
+          "BLS023A","BLS025A","BLS027A","BLS028A","BLS030A","BLS032A",
+          "BLS033A","BLS034A","BLS035A","BLS036A","BLS038A","BLS040A",
+          "BLS041A","BLS043A","BLS044A","BLS045A","BLS048A","BLS049A",
+          "BLS051A","BLS052A","BLS053A","BLS055A","BLS056A","BLS059A",
+          "BLS063A","BLS064A","BLS065A","BLS068A","BLS073A","BLS078A",
+          "BLS079A","BLS083A")
+
+# Issue with redcap_read(): 
+# Error in inherits(ds, "data.frame") : object 'ds' not found
+#-------------------------
+# pull data
+# dat<- redcap_read(
+#   batch_size=300,
+#   records= dropped.records.v1,
+#   redcap_uri = uri, 
+#   token      = beach_token, 
+#   fields     = desired_fields
+#   )$data
+
+dat=redcap_read_oneshot(
+                redcap_uri = uri, 
+                token      = beach_token,
+                fields     = fields,
+                events     = events,
+                records    = records)
+
+active=dat$data
+
+# factors
+active$study_visit=as.factor(active$redcap_event_name)
+
+
+```
+
+
+```{r format data, include=FALSE, warning = FALSE}
+# format data
+act=active%>%
+  group_by(test_id)%>%
+  rename(questionnaire_complete = physical_activity_questionnaire_v3_022118_complete)%>%
+  mutate(drop_from_study=if(any(beach_part_drop_out == 0)) 0 else NA)%>%
+  mutate(study_visit = factor(study_visit, levels = 
+                                c("baseline_arm_1",
+                                  "third_trimester_arm_1",
+                                  "two_week_arm_1",
+                                  "two_month_arm_1",
+                                  "six_month_arm_1",
+                                  "twelve_month_arm_1")))%>%
+  select(-c(redcap_repeat_instrument,
+            redcap_event_name,
+            redcap_repeat_instance,
+            beach_part_drop_out)) %>%
+  select(test_id,study_visit, everything())%>%
+  gather(activity, response, mompa_walk_slow:mompa_dance)%>%
+  arrange(test_id, study_visit) %>%
+  select(test_id, study_visit, activity, response)
+
+```
+
+```{r third_trimester}
+
+# need to check this output against function before deleting.  
+# hard code
+third_tri = act %>%
+  group_by(test_id) %>%
+  filter(study_visit == "third_trimester_arm_1") %>%
+  select(test_id, study_visit, activity, response) %>%
+  drop_na(response) %>%
+  summarize(count = length(response)) %>%
+  mutate(percent = (count / max(count) * 100)) %>%
+  mutate(study_visit = "third_trimester_arm_1") %>%
+  select(test_id, study_visit, everything())
+dim(third_tri)
+
+# data_inventory()
+third_tri.f=data_inventory(act, group_var="test_id",
+                         row_match="third_trimester_arm_1", 
+                         col_match="study_visit",
+                         question="activity",
+                         response="response")
+dim(third_tri.f)
+
+
+```
+
+
+
+```{r two_week_arm_1}
+
+# two_week_arm_1
+
+two_wks.f=data_inventory(act, group_var="test_id",
+                         row_match="two_week_arm_1", 
+                         col_match="study_visit",
+                         question="activity",
+                         response="response")
+
+```
+
+
+```{r two_month_arm_1}
+
+# two_month_arm_1 
+
+two_months.f=data_inventory(act, group_var="test_id",
+                         row_match="two_month_arm_1", 
+                         col_match="study_visit",
+                         question="activity",
+                         response="response")
+
+```
+
+
+```{r six_month_arm_1}
+
+# six_month_arm_1 
+
+six_months.f=data_inventory(act, group_var="test_id",
+                         row_match="six_month_arm_1", 
+                         col_match="study_visit",
+                         question="activity",
+                         response="response")
+
+```
+
+
+```{r twelve_month_arm_1}
+
+# twelve_month_arm_1
+
+twelve_months.f=data_inventory(act, group_var="test_id",
+                         row_match="twelve_month_arm_1", 
+                         col_match="study_visit",
+                         question="activity",
+                         response="response")
+
+```
+
+```{r combine data}
+
+active_inventory=rbind(third_tri.f, two_wks.f, two_months.f, six_months.f, twelve_months.f)
+
+# format
+acive_redcap_import_ready=active_inventory %>%
+  mutate(percent=round(percent,1))
+
+# checks
+unique(acive_redcap_import_ready$study_visit)
+range(acive_redcap_import_ready$percent)
+table(acive_redcap_import_ready$percent)
+
+```
+
+```{r, explore data inventory}
+
+dat=acive_redcap_import_ready
+
+dat %>%
+  group_by(test_id) %>%
+  summarize(mean=mean(percent))
+
+
+```
+
